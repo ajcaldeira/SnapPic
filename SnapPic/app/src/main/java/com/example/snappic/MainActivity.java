@@ -111,32 +111,8 @@ public class MainActivity extends AppCompatActivity {
 
 
     /*******THREAD FOR CONTACTS*************/
-    /*
-    public Handler contactHandler = new Handler();
 
 
-    class ContactRunnable implements Runnable{
-        String uid;
-        ContactRunnable(String uid){
-            this.uid = uid;
-        }
-
-        @Override
-        public void run() {
-            ContactScreen contactScreen = new ContactScreen();
-            contactScreen.GetUserContacts(uid,true);
-
-        }
-    }
-
-
-    public void StartContactThread() {
-        ContactRunnable contactRunnable = new ContactRunnable(mAuth.getUid());
-        new Thread(contactRunnable).start();
-
-
-    }
-*/
     /*******THREAD FOR CONTACTS END*********/
 
 
@@ -620,6 +596,8 @@ public class MainActivity extends AppCompatActivity {
            BackToLogin();
         }
         StartBackgroundThread();
+        Intent serviceIntent = new Intent(MainActivity.this, ContactFetchIntentService.class);
+        startService(serviceIntent);
 
     }
 
@@ -716,6 +694,8 @@ public class MainActivity extends AppCompatActivity {
         //ContactScreen contactScreen = new ContactScreen();
         //contactScreen.GetUserContacts(mAuth.getUid(),true);
     }
+
+
 
     @Override
     protected void onResume(){

@@ -152,22 +152,10 @@ public class ContactScreen extends AppCompatActivity  {
                     String contactSPRef = getSharedPrefContactVar();
                     arrayList.add(contact);
                     SaveSharedPrefs(spName,cUID,dbName,contactSPRef);
-                    /*
-                    if(!isClassCall){
-
-                    }else{
 
 
-                        MainActivity mainAct = new MainActivity();
-                        mainAct.contactHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                SaveSharedPrefs(spName,cUID,dbName,contactSPRef);
-                            }
-                        });
 
-                    }
-                        */
+
                     counter++;
                 }
                 if(!isClassCall){
