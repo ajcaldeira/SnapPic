@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1077322247129",
+    "firebase_url": "https://snappic-59209.firebaseio.com",
+    "project_id": "snappic-59209",
+    "storage_bucket": "snappic-59209.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1077322247129:android:8c7b435d815fbe27",
+        "android_client_info": {
+          "package_name": "com.example.snappic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1077322247129-sh484jtmar41drs85t30ah1imuj1sa8d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.snappic",
+            "certificate_hash": "a1d2ed4ef56448ad5c08ed077273a9cec8774f00"
+          }
+        },
+        {
+          "client_id": "1077322247129-hs89d0rdlh2hgbi43fvt9t4recv2jrpu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLlQUyxb3TYC2pDNSPt0Xv6CcARvXPFEM"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1077322247129-hs89d0rdlh2hgbi43fvt9t4recv2jrpu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

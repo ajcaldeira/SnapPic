@@ -1,0 +1,22 @@
+TODO:
+
+-Make a story post
+-make screen to view the story when the image is tapped
+-get other contacts to view the story
+
+
+how to get story:
+
+get YOUR story:
+get my name
+get story date from folder (TODAYS DATE)
+
+then
+identify all your contacts uid
+use contact uid to look for a story
+foreach contactUID find story:
+if there is a story
+get todays date folder
+get first entry or whatever
+
+
