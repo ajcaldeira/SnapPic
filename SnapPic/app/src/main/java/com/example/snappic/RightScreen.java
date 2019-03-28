@@ -93,9 +93,11 @@ public class RightScreen extends AppCompatActivity {
 
                             }else{
                                 //swiped RIGHT to LEFT
+                                //Toast.makeText(RightScreen.this, "RTL", Toast.LENGTH_SHORT).show();
                                 Intent intent = new Intent(RightScreen.this, MainActivity.class);
                                 startActivity(intent);
                                 overridePendingTransition(R.anim.slide_in_left,R.anim.slide_out_right);
+
                             }
                         }
                         else
@@ -132,12 +134,14 @@ public class RightScreen extends AppCompatActivity {
     public void getUIDContactList(){
         ContactScreen contactScreen = new ContactScreen();
 
-        //check contacts are up to date and get number of them
-
-        int no_contacts = 2;//assume we have 2 contacts for testing
-        int loop_Incrementer = 0;
         String SHARED_PREFS = contactScreen.getSharedPrefContactVar();
         SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        int noContacts = contactSharedPref.getInt("noContacts",0);
+        //check contacts are up to date and get number of them
+
+        int no_contacts = noContacts;//assume we have 2 contacts for testing
+        int loop_Incrementer = 0;
+
         while(loop_Incrementer != no_contacts){
             String spName = "cUID" + String.valueOf(loop_Incrementer);
             String currentSP = contactSharedPref.getString(spName,"");

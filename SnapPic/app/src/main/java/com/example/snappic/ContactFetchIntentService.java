@@ -22,7 +22,7 @@ public class ContactFetchIntentService extends IntentService {
     DatabaseReference dbRef;
     DatabaseReference dbContacts;
     DatabaseReference dbContactsSingle;
-    private int counter = 0;
+    private int counter;
     public static final String SHARED_PREFS = "ContactSP";
     @Override
     public void onCreate() {
@@ -39,11 +39,6 @@ public class ContactFetchIntentService extends IntentService {
         return SHARED_PREFS;
     }
     public void SaveSharedPrefs(String spName, String uid,String spUsersName,String contactSPRef){
-        /*SharedPreferences contactSharedPref = getSharedPreferences(contactSPRef,MODE_PRIVATE);
-        SharedPreferences.Editor editor = contactSharedPref.edit();
-        editor.putString(spName, uid);
-        editor.putString(uid, spUsersName);
-        editor.apply();*/
         SharedPreferences contactSharedPref = getSharedPreferences(contactSPRef,MODE_PRIVATE);
         SharedPreferences.Editor editor = contactSharedPref.edit();
         editor.putString(spName, uid);
@@ -82,6 +77,10 @@ public class ContactFetchIntentService extends IntentService {
                     SaveSharedPrefs(spName,cUID,dbName,contactSPRef);
                     counter++;
                 }
+                SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
+                SharedPreferences.Editor editor = contactSharedPref.edit();
+                editor.putInt("noContacts", counter);
+                editor.apply();
             }
 
 

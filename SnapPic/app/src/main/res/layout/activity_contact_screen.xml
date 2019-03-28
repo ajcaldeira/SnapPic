@@ -28,6 +28,13 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"></include>
 
+    <include
+        android:id="@+id/custom_popup"
+        layout="@layout/custom_popup"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"></include>
     <TextView
         android:id="@+id/txtTester"
         android:layout_width="wrap_content"

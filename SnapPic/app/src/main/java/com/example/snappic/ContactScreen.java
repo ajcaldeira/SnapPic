@@ -1,6 +1,7 @@
 package com.example.snappic;
 
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -10,8 +11,11 @@ import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -23,6 +27,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -40,9 +45,17 @@ public class ContactScreen extends AppCompatActivity  {
     DatabaseReference dbRef;
     DatabaseReference dbContacts;
     DatabaseReference dbContactsSingle;
+    ArrayList<Contacts> arrayList = new ArrayList<>();
+
+    //POP UP
+    Dialog myDialog;
+    ImageButton btnPopClose;
+    TextView txtPopName;
+    TextView txtPopPhoneNo;
     private FirebaseAuth mAuth;
     private int counter = 0;
     public static final String SHARED_PREFS = "ContactSP";
+    public static final String SHARED_PREFS_SPECIFIC = "SpecificSP";
 
 
 
@@ -60,6 +73,10 @@ public class ContactScreen extends AppCompatActivity  {
         String uid = mAuth.getUid();
         txtTester.setText(uid);
         GetUserContacts(uid,false);
+
+        //POP UP
+        myDialog = new Dialog(this);
+        btnPopClose = findViewById(R.id.btnPopClose);
 
         listContacts.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -90,12 +107,62 @@ public class ContactScreen extends AppCompatActivity  {
                         }
                         break;
                 }
-                return true;
+                return false;
             }
+
+        });
+
+        listContacts.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                Contacts contact = arrayList.get(position);
+                //Toast.makeText(ContactScreen.this, contact.getName(), Toast.LENGTH_SHORT).show();
+                myDialog.setContentView(R.layout.custom_popup);
+                txtPopName = myDialog.findViewById(R.id.txtPopName);
+                txtPopName.setText(contact.getName());
+                txtPopPhoneNo = myDialog.findViewById(R.id.txtPopPhoneNo);
+                txtPopPhoneNo.setText(contact.getNumber());
+                myDialog.show();
+            }
+
         });
 
 
+    }
 
+    public void closePopUp(View v){
+        myDialog.hide();
+    }
+    public void sendSnap(View v){
+        //get the first shared prefs with all contacts
+        String SHARED_PREFS = getSharedPrefContactVar();
+        SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+
+        //shared prefs with uid linked to phone number
+        SharedPreferences contactSharedPrefsSpecific = getSharedPreferences(SHARED_PREFS_SPECIFIC, MODE_PRIVATE);
+
+        int noContacts = contactSharedPref.getInt("noContacts",0);
+        int loop_Incrementer = 0;
+        while(loop_Incrementer != noContacts){
+            String spName = "cUID" + String.valueOf(loop_Incrementer);
+            String uid = contactSharedPref.getString(spName,"");
+            String userNumber = contactSharedPrefsSpecific.getString(uid,"");
+            if(userNumber.equals(txtPopPhoneNo.getText())){
+                //if the number the user tapped on is equal to the current shared pref then end the loop
+                //and continue to the main screen
+                //Toast.makeText(this, userNumber, Toast.LENGTH_SHORT).show();
+                loop_Incrementer = noContacts;
+            }else {
+                loop_Incrementer++;
+            }
+        }
+
+        Intent sendSnapMain = new Intent(ContactScreen.this, MainActivity.class);
+        sendSnapMain.putExtra("isToSend", true);
+        sendSnapMain.putExtra("toSendName", true);
+        sendSnapMain.putExtra("toSendNumber", true);
+        startActivity(sendSnapMain);
     }
 
     public String getSharedPrefContactVar(){
@@ -109,14 +176,18 @@ public class ContactScreen extends AppCompatActivity  {
         startActivity(mainActivity);
     }
 
-    public void SaveSharedPrefs(String spName, String uid,String spUsersName,String contactSPRef){
+    public void SaveSharedPrefs(String spName, String uid,String spUsersName,String contactSPRef,String spUsersNumber){
         SharedPreferences contactSharedPref = getSharedPreferences(contactSPRef,MODE_PRIVATE);
         SharedPreferences.Editor editor = contactSharedPref.edit();
         editor.putString(spName, uid);
         editor.putString(uid, spUsersName);
         editor.apply();
 
-        //Toast.makeText(ContactScreen.this, "s", Toast.LENGTH_SHORT).show();
+        //another shared pref to connect the UIDs to the phone number as opposed to the name above
+        SharedPreferences specificSendContact = getSharedPreferences(SHARED_PREFS_SPECIFIC,MODE_PRIVATE);
+        SharedPreferences.Editor specificEditor = specificSendContact.edit();
+        specificEditor.putString(uid,spUsersNumber);
+        specificEditor.apply();
     }
 
     public String LoadSharedPrefs(String spName,String spKey){
@@ -137,7 +208,7 @@ public class ContactScreen extends AppCompatActivity  {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 //iterate through db and check if the number the user just used to sign up exists already
-                ArrayList<Contacts> arrayList = new ArrayList<>();
+
                 counter = 0;
                 for(DataSnapshot userSnapshot: dataSnapshot.getChildren()){
                     User users = userSnapshot.getValue(User.class);
@@ -151,11 +222,7 @@ public class ContactScreen extends AppCompatActivity  {
                     String spName = "cUID" + String.valueOf(counter);
                     String contactSPRef = getSharedPrefContactVar();
                     arrayList.add(contact);
-                    SaveSharedPrefs(spName,cUID,dbName,contactSPRef);
-
-
-
-
+                    SaveSharedPrefs(spName,cUID,dbName,contactSPRef,dbNumber);
                     counter++;
                 }
                 if(!isClassCall){
@@ -163,6 +230,7 @@ public class ContactScreen extends AppCompatActivity  {
                     ContactsListAdapter adapter = new ContactsListAdapter(ContactScreen.this, R.layout.custom_layout, arrayList);
                     listContacts.setAdapter(adapter);
                 }
+
 
                     //ArrayAdapter arrayAdapter = new ArrayAdapter(ContactScreen.this, android.R.layout.simple_list_item_1, arrayList);
                     //listContacts.setAdapter(arrayAdapter);
@@ -179,36 +247,5 @@ public class ContactScreen extends AppCompatActivity  {
 
     }
 
-    public boolean onTouchEvent(MotionEvent event){
-
-        switch(event.getAction())
-        {
-            case MotionEvent.ACTION_DOWN:
-                x1 = event.getX();
-                break;
-            case MotionEvent.ACTION_UP:
-                x2 = event.getX();
-                float deltaX = x2 - x1;
-                if (Math.abs(deltaX) > MIN_DISTANCE)
-                {
-                    if(deltaX > 0){
-                        // LEFT TO RIGHT
-
-                    }else{
-                        //swiped RIGHT to LEFT
-                        Intent intent = new Intent(this, MainActivity.class);
-                        startActivity(intent);
-                        overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left);
-                    }
-                }
-                else
-                {
-                    // consider as something else - a screen tap for example
-                }
-                break;
-        }
-        return super.onTouchEvent(event);
-
-    }
 
 }

@@ -101,7 +101,9 @@ public class MainActivity extends AppCompatActivity {
     ShowCamera showcam;
     ToggleButton btnFlash;
     TextureView textureView;
-
+    Button btnIsSend;
+    //this will be true if the user wants to send a pic to another user FROM the contact screen
+    private boolean isToSend = false;
 
     private FirebaseAuth mAuth;
 
@@ -619,8 +621,30 @@ public class MainActivity extends AppCompatActivity {
         FirebaseApp.initializeApp(this);
         mAuth = FirebaseAuth.getInstance();
 
+        //Get info from contact intent
+        btnIsSend = findViewById(R.id.btnIsSend);
+        try{
+            Intent intent = getIntent();
+            isToSend = intent.getExtras().getBoolean("isToSend");
+        }catch(Exception e){
+            e.getStackTrace();
+        }
 
-        //change camera
+        //IF THE USER IS tryign to send from the contact activity this will be true
+        //else the cancel button will not show as there is nothing to cancel
+        if(isToSend){
+            btnIsSend.setVisibility(View.VISIBLE);
+        }else{
+            btnIsSend.setVisibility(View.INVISIBLE);
+
+        }
+        btnIsSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
+        //swap camera
         btnSwapCam = findViewById(R.id.btnSwapCam);
         btnSwapCam.setOnClickListener(new View.OnClickListener() {
             @Override
