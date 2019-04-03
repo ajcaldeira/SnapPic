@@ -47,6 +47,8 @@ public class LoginScreen extends AppCompatActivity {
     TextView txtWrongNumber;
     ProgressBar progressBar;
     String phoneNumber;
+    String codeSent;
+    Button btnSubmitVerCode;
     PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
 
     FirebaseAuth mAuth;
@@ -64,68 +66,68 @@ public class LoginScreen extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         btnWrongNumber = findViewById(R.id.btnWrongNumber);
         txtWrongNumber = findViewById(R.id.txtWrongNumber);
-
+        btnSubmitVerCode = findViewById(R.id.btnSubmitVerCode);
         btnGetNumber.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                String rawNumber = getPhoneNumber();
-                rawNumber = rawNumber.replace("00","+");
-                txtPhoneNumber.setText(rawNumber);
+                //String rawNumber = getPhoneNumber();
+                //rawNumber = rawNumber.replace("00","+");
+                //txtPhoneNumber.setText(rawNumber);
                 progressBar.setVisibility(View.VISIBLE);
                 phoneNumber = txtPhoneNumber.getText().toString();
 
-                PhoneAuthProvider.getInstance().verifyPhoneNumber(
-                        phoneNumber,        // Phone number to verify
-                        10,                 // Timeout duration
-                        TimeUnit.SECONDS,   // Unit of timeout
-                        LoginScreen.this,               // Activity (for callback binding)
-                        new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-                            @Override
-                            public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
-                                signInWithPhoneAuthCredential(phoneAuthCredential);
-                            }
+                mCallbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
 
-                            @Override
-                            public void onVerificationFailed(FirebaseException e) {
-                                progressBar.setVisibility(View.INVISIBLE);
-                                txtError.setText("Verification Error!!");
-                                txtError.setVisibility(View.VISIBLE);
-                                btnGetNumber.setVisibility(View.INVISIBLE);
-                                btnWrongNumber.setVisibility(View.VISIBLE);
-                                txtWrongNumber.setVisibility(View.VISIBLE);
-                            }
-                        });
+                    @Override
+                    public void onVerificationCompleted(PhoneAuthCredential credential) {
 
+                        signInWithPhoneAuthCredential(credential);
+                    }
+
+                    @Override
+                    public void onVerificationFailed(FirebaseException e) {
+
+                    }
+
+                    @Override
+                    public void onCodeSent(String verificationId,PhoneAuthProvider.ForceResendingToken token) {
+
+
+
+                    }
+                };
+                sendVerificationCode();
             }
         });
+
+
+        btnSubmitVerCode.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                verifyCode();
+            }
+        });
+
+
         btnWrongNumber.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 txtError.setVisibility(View.INVISIBLE);
                 progressBar.setVisibility(View.VISIBLE);
                 phoneNumber = txtPhoneNumber.getText().toString();
-                PhoneAuthProvider.getInstance().verifyPhoneNumber(
-                        phoneNumber,        // Phone number to verify
-                        10,                 // Timeout duration
-                        TimeUnit.SECONDS,   // Unit of timeout
-                        LoginScreen.this,               // Activity (for callback binding)
-                        new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-                            @Override
-                            public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
-                                signInWithPhoneAuthCredential(phoneAuthCredential);
-                            }
-
-                            @Override
-                            public void onVerificationFailed(FirebaseException e) {
-                                progressBar.setVisibility(View.INVISIBLE);
-                                txtError.setText("Verification Error!!");
-                                txtError.setVisibility(View.VISIBLE);
-                                btnGetNumber.setVisibility(View.INVISIBLE);
-                                btnWrongNumber.setVisibility(View.VISIBLE);
-                            }
-                        });
             }
         });
+
+
+
+    }
+
+    public void verifyCode(){
+
+        String code = txtVerCode.getText().toString();
+
+        PhoneAuthCredential credential = PhoneAuthProvider.getCredential(codeSent, code);
+        signInWithPhoneAuthCredential(credential);
     }
 
     public String getPhoneNumber(){
@@ -151,9 +153,26 @@ public class LoginScreen extends AppCompatActivity {
         }
 
     }
+
+    private void sendVerificationCode(){
+
+        String phone = txtPhoneNumber.getText().toString();
+        if(phone.isEmpty()){
+            Toast.makeText(this, "ERROR!", Toast.LENGTH_SHORT).show();
+        }
+        PhoneAuthProvider.getInstance().verifyPhoneNumber(
+                phoneNumber,
+                60,
+                TimeUnit.SECONDS,
+                this,
+                mCallbacks
+        );
+    }
+
+
+
 //ver
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
-
         mAuth.signInWithCredential(credential)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
