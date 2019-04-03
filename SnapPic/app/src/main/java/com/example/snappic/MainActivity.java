@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
     Button btnIsSend;
     //this will be true if the user wants to send a pic to another user FROM the contact screen
     private boolean isToSend = false;
-
+    String toSendUidPassed = "";
     private FirebaseAuth mAuth;
 
 
@@ -117,7 +117,13 @@ public class MainActivity extends AppCompatActivity {
 
     /*******THREAD FOR CONTACTS END*********/
 
-
+    //OVERIDE BACK BUTTON PRESS
+    @Override
+    public void onBackPressed() {
+        moveTaskToBack(true);
+        Intent mainActivity = new Intent(MainActivity.this,MainActivity.class);
+        startActivity(mainActivity);
+    }
     /******************CAMERA2******************/
     private TextureView.SurfaceTextureListener mSurfaceTexListener = new TextureView.SurfaceTextureListener() {
         @SuppressLint("NewApi")
@@ -527,11 +533,11 @@ public class MainActivity extends AppCompatActivity {
             //Send the filename and call the other intent
             Intent intent  = new Intent(MainActivity.this, show_image.class);
             intent.putExtra("filename", mFileName);
+            intent.putExtra("toSendUID",  toSendUidPassed);
             startActivity(intent);
 
         }
     }
-
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void LockCameraFocus(){
@@ -626,6 +632,8 @@ public class MainActivity extends AppCompatActivity {
         try{
             Intent intent = getIntent();
             isToSend = intent.getExtras().getBoolean("isToSend");
+            toSendUidPassed = intent.getExtras().getString("toSendUID");
+            Toast.makeText(this, toSendUidPassed, Toast.LENGTH_SHORT).show();
         }catch(Exception e){
             e.getStackTrace();
         }
@@ -641,7 +649,8 @@ public class MainActivity extends AppCompatActivity {
         btnIsSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                startActivity(intent);
             }
         });
         //swap camera

@@ -36,4 +36,30 @@
         android:textSize="22sp"
         tools:layout_editor_absoluteX="95dp"
         tools:layout_editor_absoluteY="61dp" />
+
+    <ImageView
+        android:id="@+id/imageView4"
+        android:layout_width="78dp"
+        android:layout_height="64dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="1dp"
+        android:layout_marginEnd="14dp"
+        android:layout_marginRight="14dp"
+        app:srcCompat="@drawable/message_notification" />
+
+    <TextView
+        android:id="@+id/txtNoNotifications"
+        android:layout_width="32dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="7dp"
+        android:layout_marginEnd="9dp"
+        android:layout_marginRight="9dp"
+        android:gravity="center"
+        android:text="0"
+        android:textColor="@color/cardview_light_background" />
 </RelativeLayout>

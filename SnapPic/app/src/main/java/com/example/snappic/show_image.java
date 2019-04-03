@@ -47,6 +47,7 @@ public class show_image extends AppCompatActivity {
     Button btnSendImage;
     Button btnStory;
     String mFileName;
+    String mtoSendUID;
     private String uid;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +78,9 @@ public class show_image extends AppCompatActivity {
         //get  from previous activity:
         Intent intent = getIntent();
         String fileName = intent.getExtras().getString("filename");
+        String toSendUID = intent.getExtras().getString("toSendUID");
         mFileName = fileName;
+        mtoSendUID = toSendUID;
         //make sure still not null
         if(fileName != null){
             //declare image view:
@@ -97,6 +100,10 @@ public class show_image extends AppCompatActivity {
             }
         }
 
+        //MAKE THE BUTTON INVISIBLE IF THERE IS NO UID TO SEND TO
+        if(mtoSendUID.equals("")){
+            btnSendImage.setVisibility(View.INVISIBLE);
+        }
         btnSendImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -104,9 +111,8 @@ public class show_image extends AppCompatActivity {
                 if(mUploadTask !=null && mUploadTask.isInProgress()){
                     Toast.makeText(show_image.this,"Please Wait For Your Upload To Finish",Toast.LENGTH_SHORT).show();
                 }else{
-                    uploadFile();
+                    sendToSpecificUser(mtoSendUID);
                 }
-
             }
         });
         btnStory.setOnClickListener(new View.OnClickListener() {
@@ -184,9 +190,18 @@ public class show_image extends AppCompatActivity {
         Intent mainActivity = new Intent(show_image.this,MainActivity.class);
         startActivity(mainActivity);
     }
-    public void uploadFile(){
+    public void sendToSpecificUser(String SendUID){
+        //where to save in FireBase storage storage
+        Date date = new Date();
+        final String timestampSend = "" + System.currentTimeMillis();
+        mStorageRef = FirebaseStorage.getInstance().getReference("Story").child(mAuth.getUid());
+        //WHERE TO SAVE IN DB
+        mdbRef = FirebaseDatabase.getInstance().getReference("Users");
+        dbRetrieve = mdbRef.child(SendUID);
+        dbRetrieveIn = dbRetrieve.child("Received").child(uid);
+        dbStoryDate = dbRetrieveIn.child(timestampSend);
         if(mImageUri != null){
-            final StorageReference fileReference = mStorageRef.child(System.currentTimeMillis() + uid + "." + getFileExtensions(mImageUri));
+            final StorageReference fileReference = mStorageRef.child(System.currentTimeMillis() + uid + ".jpg" /*+ getFileExtensions(mImageUri)*/);
             mUploadTask = fileReference.putFile(mImageUri)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
@@ -199,13 +214,12 @@ public class show_image extends AppCompatActivity {
                                     Upload upload = new Upload(mFileName.trim(),
                                             uri.toString());
                                     //creates new db entry with unique id
-                                    String uploadID = dbRetrieveIn.push().getKey();
-                                    dbRetrieveIn.child(uploadID).setValue(upload);
+                                    //String uploadID = dbStoryDate.push().getKey();
+                                    dbStoryDate.setValue(upload);
+                                    dbStoryDate.child("timestamp").setValue(timestampSend);
                                     Toast.makeText(show_image.this, "Sent!",Toast.LENGTH_SHORT).show();
                                 }
                             });
-
-
                             //Toast.makeText(show_image.this, taskSnapshot.getMetadata().getReference().getDownloadUrl().toString(),Toast.LENGTH_SHORT).show();
                         }
                     })

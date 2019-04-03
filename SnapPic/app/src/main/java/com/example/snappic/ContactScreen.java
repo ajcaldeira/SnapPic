@@ -38,7 +38,6 @@ public class ContactScreen extends AppCompatActivity  {
     static final int MIN_DISTANCE = 150;
 
     ListView listContacts;
-    TextView txtTester;
     TextView txtContName;
     TextView txtContNumber;
     ProgressBar progressBarContact;
@@ -64,14 +63,12 @@ public class ContactScreen extends AppCompatActivity  {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_screen);
-        txtTester = findViewById(R.id.txtTester);
         txtContName = findViewById(R.id.txtContName);
         txtContNumber = findViewById(R.id.txtContNumber);
         listContacts = findViewById(R.id.listContacts);
         progressBarContact = findViewById(R.id.progressBarContact);
         mAuth = FirebaseAuth.getInstance();
         String uid = mAuth.getUid();
-        txtTester.setText(uid);
         GetUserContacts(uid,false);
 
         //POP UP
@@ -141,7 +138,6 @@ public class ContactScreen extends AppCompatActivity  {
 
         //shared prefs with uid linked to phone number
         SharedPreferences contactSharedPrefsSpecific = getSharedPreferences(SHARED_PREFS_SPECIFIC, MODE_PRIVATE);
-
         int noContacts = contactSharedPref.getInt("noContacts",0);
         int loop_Incrementer = 0;
         while(loop_Incrementer != noContacts){
@@ -151,18 +147,15 @@ public class ContactScreen extends AppCompatActivity  {
             if(userNumber.equals(txtPopPhoneNo.getText())){
                 //if the number the user tapped on is equal to the current shared pref then end the loop
                 //and continue to the main screen
-                //Toast.makeText(this, userNumber, Toast.LENGTH_SHORT).show();
-                loop_Incrementer = noContacts;
+                Intent sendSnapMain = new Intent(ContactScreen.this, MainActivity.class);
+                sendSnapMain.putExtra("isToSend", true);
+                sendSnapMain.putExtra("toSendUID", uid);
+                startActivity(sendSnapMain);
+                break;
             }else {
                 loop_Incrementer++;
             }
         }
-
-        Intent sendSnapMain = new Intent(ContactScreen.this, MainActivity.class);
-        sendSnapMain.putExtra("isToSend", true);
-        sendSnapMain.putExtra("toSendName", true);
-        sendSnapMain.putExtra("toSendNumber", true);
-        startActivity(sendSnapMain);
     }
 
     public String getSharedPrefContactVar(){

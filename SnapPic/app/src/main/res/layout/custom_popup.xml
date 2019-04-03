@@ -9,7 +9,7 @@
     <View
         android:id="@+id/view"
         android:layout_width="290dp"
-        android:layout_height="258dp"
+        android:layout_height="314dp"
         android:background="@color/colorCustomPastelOrange"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -30,7 +30,7 @@
         app:layout_constraintHorizontal_bias="0.47"
         app:layout_constraintStart_toStartOf="@+id/view"
         app:layout_constraintTop_toTopOf="@+id/view"
-        app:layout_constraintVertical_bias="0.175" />
+        app:layout_constraintVertical_bias="0.132" />
 
     <Button
         android:id="@+id/btnPopDeleteContact"
@@ -49,7 +49,7 @@
         android:id="@+id/btnPopSendMessage"
         android:layout_width="199dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="44dp"
+        android:layout_marginBottom="92dp"
         android:background="@color/colorMiddleGreenYellow"
         android:onClick="sendSnap"
         android:text="Send Snap"
@@ -57,6 +57,22 @@
         app:layout_constraintEnd_toEndOf="@+id/btnPopDeleteContact"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="@+id/btnPopDeleteContact" />
+
+    <Button
+        android:id="@+id/btnPopSendMessage2"
+        android:layout_width="199dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="12dp"
+        android:background="@color/colorLightBlue"
+        android:onClick="sendSnap"
+        android:text="View Messages"
+        app:layout_constraintBottom_toTopOf="@+id/btnPopDeleteContact"
+        app:layout_constraintEnd_toEndOf="@+id/btnPopDeleteContact"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/btnPopDeleteContact"
+        app:layout_constraintTop_toBottomOf="@+id/btnPopSendMessage"
+        app:layout_constraintVertical_bias="0.0" />
 
     <ImageButton
         android:id="@+id/btnPopClose"
@@ -87,5 +103,5 @@
         app:layout_constraintEnd_toEndOf="@+id/txtPopName"
         app:layout_constraintStart_toStartOf="@+id/txtPopName"
         app:layout_constraintTop_toBottomOf="@+id/txtPopName"
-        app:layout_constraintVertical_bias="0.277" />
+        app:layout_constraintVertical_bias="0.0" />
 </android.support.constraint.ConstraintLayout>
