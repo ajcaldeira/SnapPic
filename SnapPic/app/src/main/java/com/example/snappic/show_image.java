@@ -15,11 +15,15 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
@@ -217,7 +221,7 @@ public class show_image extends AppCompatActivity {
                                     //String uploadID = dbStoryDate.push().getKey();
                                     dbStoryDate.setValue(upload);
                                     dbStoryDate.child("timestamp").setValue(timestampSend);
-                                    Toast.makeText(show_image.this, "Sent!",Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(show_image.this, "Sending..",Toast.LENGTH_SHORT).show();
                                 }
                             });
                             //Toast.makeText(show_image.this, taskSnapshot.getMetadata().getReference().getDownloadUrl().toString(),Toast.LENGTH_SHORT).show();
@@ -233,6 +237,22 @@ public class show_image extends AppCompatActivity {
                         @Override
                         public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
                             //can put progress bar here
+                        }
+                    });
+            FirebaseInstanceId.getInstance().getInstanceId()
+                    .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                            if (!task.isSuccessful()) {
+                                Toast.makeText(show_image.this, "Cant send notification! Something Went Wrong! :(", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            String token = task.getResult().getToken();
+
+                            //send notification:
+                            new SendNotificationJava(token).execute();
+                            Toast.makeText(show_image.this, "Sent!", Toast.LENGTH_SHORT).show();
                         }
                     });
         }else{

@@ -76,7 +76,7 @@ public class LoginScreen extends AppCompatActivity {
 
                 PhoneAuthProvider.getInstance().verifyPhoneNumber(
                         phoneNumber,        // Phone number to verify
-                        60,                 // Timeout duration
+                        10,                 // Timeout duration
                         TimeUnit.SECONDS,   // Unit of timeout
                         LoginScreen.this,               // Activity (for callback binding)
                         new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
@@ -106,7 +106,7 @@ public class LoginScreen extends AppCompatActivity {
                 phoneNumber = txtPhoneNumber.getText().toString();
                 PhoneAuthProvider.getInstance().verifyPhoneNumber(
                         phoneNumber,        // Phone number to verify
-                        60,                 // Timeout duration
+                        10,                 // Timeout duration
                         TimeUnit.SECONDS,   // Unit of timeout
                         LoginScreen.this,               // Activity (for callback binding)
                         new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {

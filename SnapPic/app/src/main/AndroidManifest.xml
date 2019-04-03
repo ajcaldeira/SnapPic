@@ -30,12 +30,13 @@
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         tools:ignore="GoogleAppIndexingWarning">
         <service
-            android:name=".ContactFetchIntentService"
+            android:name=".Service.FirebaseMsgService"
             android:exported="false">
             <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+
 
         <activity android:name=".RegsiterUser" />
         <activity android:name=".RegisterScreen" />

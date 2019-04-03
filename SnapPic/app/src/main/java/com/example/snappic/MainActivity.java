@@ -37,6 +37,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.EventLog;
+import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.KeyEvent;
@@ -54,10 +55,14 @@ import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -724,8 +729,6 @@ public class MainActivity extends AppCompatActivity {
         }else {
             handlePermissions();
         }
-        //ContactScreen contactScreen = new ContactScreen();
-        //contactScreen.GetUserContacts(mAuth.getUid(),true);
     }
 
 
@@ -741,7 +744,6 @@ public class MainActivity extends AppCompatActivity {
                 textureView.setSurfaceTextureListener(mSurfaceTexListener);
             }
         }
-
     }
 
     public boolean onTouchEvent(MotionEvent event){

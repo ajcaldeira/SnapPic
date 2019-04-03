@@ -8,8 +8,11 @@ import android.graphics.Color;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.snappic.R;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
@@ -17,6 +20,8 @@ import java.util.Random;
 
 @SuppressWarnings("ALL")
 public class FirebaseMsgService extends FirebaseMessagingService {
+
+
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
@@ -52,7 +57,8 @@ public class FirebaseMsgService extends FirebaseMessagingService {
     @Override
     public void onNewToken(String s) {
         super.onNewToken(s);
-
+        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
         Log.d("TOKENFIREBASE",s);
+
     }
 }
