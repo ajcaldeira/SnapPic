@@ -151,7 +151,7 @@ public class LoginScreen extends AppCompatActivity {
         }
 
     }
-
+//ver
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
 
         mAuth.signInWithCredential(credential)
