@@ -139,7 +139,7 @@ public class RightScreen extends AppCompatActivity {
         int noContacts = contactSharedPref.getInt("noContacts",0);
         //check contacts are up to date and get number of them
 
-        int no_contacts = noContacts;//assume we have 2 contacts for testing
+        int no_contacts = noContacts;
         int loop_Incrementer = 0;
 
         while(loop_Incrementer != no_contacts){

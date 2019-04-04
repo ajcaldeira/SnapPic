@@ -5,9 +5,11 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,21 +17,29 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 public class ContactScreen extends AppCompatActivity  {
 
@@ -45,10 +55,13 @@ public class ContactScreen extends AppCompatActivity  {
     DatabaseReference dbContacts;
     DatabaseReference dbContactsSingle;
     ArrayList<Contacts> arrayList = new ArrayList<>();
-
+    EditText txtSearchNumber;
+    Button btnAddContact;
     //POP UP
     Dialog myDialog;
+    Dialog myContactDialog;
     ImageButton btnPopClose;
+    ImageButton btnNewContact;
     TextView txtPopName;
     TextView txtPopPhoneNo;
     private FirebaseAuth mAuth;
@@ -67,12 +80,15 @@ public class ContactScreen extends AppCompatActivity  {
         txtContNumber = findViewById(R.id.txtContNumber);
         listContacts = findViewById(R.id.listContacts);
         progressBarContact = findViewById(R.id.progressBarContact);
+        btnNewContact = findViewById(R.id.btnNewContact);
+        btnAddContact = findViewById(R.id.btnAddContact);
         mAuth = FirebaseAuth.getInstance();
         String uid = mAuth.getUid();
         GetUserContacts(uid,false);
 
         //POP UP
         myDialog = new Dialog(this);
+        myContactDialog = new Dialog(this);
         btnPopClose = findViewById(R.id.btnPopClose);
 
         listContacts.setOnTouchListener(new View.OnTouchListener() {
@@ -124,10 +140,78 @@ public class ContactScreen extends AppCompatActivity  {
             }
 
         });
+        btnNewContact.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                myContactDialog.setContentView(R.layout.add_contact_dialog);
+                txtSearchNumber = myContactDialog.findViewById(R.id.txtSearchNumber);
+                btnAddContact = myContactDialog.findViewById(R.id.btnAddContact);
+                myContactDialog.show();
+            }
+        });
+
 
 
     }
 
+    public void AddNewContact(View v){
+        //GET THE USER'S CONTACTS
+        dbRef = FirebaseDatabase.getInstance().getReference("Users");
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                //iterate through db and check if the number the user just used to sign up exists already
+                boolean isInDb = false;
+                String searchedNumber =  txtSearchNumber.getText().toString();
+                for(DataSnapshot ds: dataSnapshot.getChildren()){
+                    String currentNo = ds.child("number").getValue(String.class);
+                    String uid = ds.getKey();
+                    if(searchedNumber.equals(currentNo)){
+                        //check if the user already sent a contact request
+                        if(ds.child("ReceivedContactRequests").child(mAuth.getUid()).hasChildren()){
+                            Log.d("ALREADYIN", "Already in db");
+                            Toast.makeText(ContactScreen.this, "Already Sent!", Toast.LENGTH_SHORT).show();
+                        }else{
+                            String sentName = dataSnapshot.child(mAuth.getUid()).child("name").getValue().toString();
+                            String sentNumber = dataSnapshot.child(mAuth.getUid()).child("number").getValue().toString();
+
+                            dbRef.child(uid).child("ReceivedContactRequests").child(mAuth.getUid()).child("Name").setValue(sentName);
+                            dbRef.child(uid).child("ReceivedContactRequests").child(mAuth.getUid()).child("Number").setValue(sentNumber);
+
+                            //send notification to ds.child(uid).child(number) or token whatever
+
+
+
+                            Toast.makeText(ContactScreen.this, "Contact Request Sent", Toast.LENGTH_SHORT).show();
+
+                        }
+                        searchedNumber = "";
+                        txtSearchNumber.setText("");
+                        break;
+                    }
+
+                }
+
+
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        });
+    }
+    public void sendContactRequest(){
+        dbRef = FirebaseDatabase.getInstance().getReference("Users");
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                //iterate through db and check if the number the user just used to sign up exists already
+
+
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        });
+
+    }
     public void closePopUp(View v){
         myDialog.hide();
     }
