@@ -25,6 +25,7 @@ public class ContactFetchIntentService extends IntentService {
     DatabaseReference dbContactsSingle;
     private int counter;
     public static final String SHARED_PREFS = "ContactSP";
+    public static final String SHARED_PREFS_REQ_CONTACTS = "ContactREQ";
     @Override
     public void onCreate() {
         super.onCreate();
@@ -45,11 +46,11 @@ public class ContactFetchIntentService extends IntentService {
         editor.putString(spName, uid);
         editor.putString(uid, spUsersName);
         editor.apply();
-
     }
     @Override
     protected void onHandleIntent(Intent intent) {
         String uid = mAuth.getUid();
+
         GetUserContacts(uid,false);
         CheckIfUserHasContactRequest();
     }
@@ -95,31 +96,36 @@ public class ContactFetchIntentService extends IntentService {
 
     }
 
+    public void updateNumContactReq(int noContacts){
+        SharedPreferences contactSharedPrefReq = getSharedPreferences(SHARED_PREFS_REQ_CONTACTS,MODE_PRIVATE);
+        SharedPreferences.Editor editor = contactSharedPrefReq.edit();
+        editor.putInt("numOfContactsRequests", noContacts);
+        editor.apply();
+    }
 
     public void CheckIfUserHasContactRequest(){
-        dbRef = FirebaseDatabase.getInstance().getReference("Users");
+        dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid());
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //iterate through db and check if the number the user just used to sign up exists already
-                boolean isInDb = false;
-                for(DataSnapshot ds: dataSnapshot.getChildren()){
-                    String currentNo = ds.child("number").getValue(String.class);
-                    String uid = ds.getKey();
+
+
                     if(true){
                         //check if the user already sent a contact request
-                        if(ds.child("ReceivedContactRequests").hasChildren()){
-                            Log.d("ALREADYIN", "Already in db");
-                            Toast.makeText(ContactScreen.this, "Already Sent!", Toast.LENGTH_SHORT).show();
+                        if(dataSnapshot.child("ReceivedContactRequests").exists()){
+                            Log.d("HASREQ", "HAS REQUEST: " + dataSnapshot.child("ReceivedContactRequests").getChildrenCount());
+                            //new requests
+                            int noContactReq = (int)dataSnapshot.child("ReceivedContactRequests").getChildrenCount();
+                            updateNumContactReq(noContactReq );
                         }else{
                             //nothing new
+                            Log.d("HASREQ", "HAS NO REQUEST");
+                            updateNumContactReq(0);
                         }
-                        searchedNumber = "";
-                        txtSearchNumber.setText("");
-                        break;
                     }
 
-                }
+
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}

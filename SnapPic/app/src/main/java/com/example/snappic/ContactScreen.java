@@ -50,6 +50,7 @@ public class ContactScreen extends AppCompatActivity  {
     ListView listContacts;
     TextView txtContName;
     TextView txtContNumber;
+    TextView txtNewContacts;
     ProgressBar progressBarContact;
     DatabaseReference dbRef;
     DatabaseReference dbContacts;
@@ -78,6 +79,7 @@ public class ContactScreen extends AppCompatActivity  {
         setContentView(R.layout.activity_contact_screen);
         txtContName = findViewById(R.id.txtContName);
         txtContNumber = findViewById(R.id.txtContNumber);
+        txtNewContacts = findViewById(R.id.txtNewContacts);
         listContacts = findViewById(R.id.listContacts);
         progressBarContact = findViewById(R.id.progressBarContact);
         btnNewContact = findViewById(R.id.btnNewContact);
@@ -154,6 +156,14 @@ public class ContactScreen extends AppCompatActivity  {
 
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        SharedPreferences contactSharedPrefReq = getSharedPreferences("ContactREQ", MODE_PRIVATE);
+        int currentREQ = contactSharedPrefReq.getInt("numOfContactsRequests",0);
+        txtNewContacts.setText(String.valueOf(currentREQ));
+    }
+
     public void AddNewContact(View v){
         //GET THE USER'S CONTACTS
         dbRef = FirebaseDatabase.getInstance().getReference("Users");
@@ -178,10 +188,7 @@ public class ContactScreen extends AppCompatActivity  {
                             dbRef.child(uid).child("ReceivedContactRequests").child(mAuth.getUid()).child("Name").setValue(sentName);
                             dbRef.child(uid).child("ReceivedContactRequests").child(mAuth.getUid()).child("Number").setValue(sentNumber);
 
-                            //send notification to ds.child(uid).child(number) or token whatever
-
-
-
+                            //send notification to ds.child(uid).child(number)
                             Toast.makeText(ContactScreen.this, "Contact Request Sent", Toast.LENGTH_SHORT).show();
 
                         }

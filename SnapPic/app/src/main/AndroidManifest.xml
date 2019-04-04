@@ -37,7 +37,11 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        <service
+            android:name=".ContactFetchIntentService"
+            android:enabled="true">
 
+        </service>
         <activity android:name=".RegsiterUser" />
         <activity android:name=".RegisterScreen" />
         <activity android:name=".LoginScreen">
