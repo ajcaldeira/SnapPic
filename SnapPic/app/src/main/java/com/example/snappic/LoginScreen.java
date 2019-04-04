@@ -49,7 +49,7 @@ public class LoginScreen extends AppCompatActivity {
     String phoneNumber;
     String codeSent;
     Button btnSubmitVerCode;
-    PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks;
+
 
     FirebaseAuth mAuth;
     DatabaseReference dbRef;
@@ -75,28 +75,9 @@ public class LoginScreen extends AppCompatActivity {
                 //txtPhoneNumber.setText(rawNumber);
                 progressBar.setVisibility(View.VISIBLE);
                 phoneNumber = txtPhoneNumber.getText().toString();
-
-                mCallbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-
-                    @Override
-                    public void onVerificationCompleted(PhoneAuthCredential credential) {
-
-                        signInWithPhoneAuthCredential(credential);
-                    }
-
-                    @Override
-                    public void onVerificationFailed(FirebaseException e) {
-
-                    }
-
-                    @Override
-                    public void onCodeSent(String verificationId,PhoneAuthProvider.ForceResendingToken token) {
-
-
-
-                    }
-                };
                 sendVerificationCode();
+
+
             }
         });
 
@@ -121,6 +102,26 @@ public class LoginScreen extends AppCompatActivity {
 
 
     }
+
+    PhoneAuthProvider.OnVerificationStateChangedCallbacks mCallbacks = new PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+
+        @Override
+        public void onVerificationCompleted(PhoneAuthCredential credential) {
+
+            signInWithPhoneAuthCredential(credential);
+        }
+
+        @Override
+        public void onVerificationFailed(FirebaseException e) {
+
+        }
+
+        @Override
+        public void onCodeSent(String verificationId,PhoneAuthProvider.ForceResendingToken token) {
+            super.onCodeSent(verificationId,token);
+            codeSent = verificationId;
+        }
+    };
 
     public void verifyCode(){
 
