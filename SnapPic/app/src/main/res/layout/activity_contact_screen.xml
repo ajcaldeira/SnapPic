@@ -72,4 +72,35 @@
         app:srcCompat="@drawable/e"
         tools:ignore="VectorDrawableCompat" />
 
+    <ImageView
+        android:id="@+id/btnContactAlert"
+        android:layout_width="62dp"
+        android:layout_height="41dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/app_bar"
+        app:layout_constraintEnd_toEndOf="@+id/app_bar"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/person" />
+
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:text="0"
+        android:textColor="@color/colorAccent"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/btnContactAlert"
+        app:layout_constraintEnd_toEndOf="@+id/btnContactAlert"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/btnContactAlert" />
+
 </android.support.constraint.ConstraintLayout>

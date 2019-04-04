@@ -4,6 +4,7 @@ import android.app.IntentService;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -50,6 +51,7 @@ public class ContactFetchIntentService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         String uid = mAuth.getUid();
         GetUserContacts(uid,false);
+        CheckIfUserHasContactRequest();
     }
     //TRYING TO GET THE USERS CONTATCS, FIRST GET THE USER WE WANNA GET THE CONTACTS OF THEN TRY ITTERATE THROUGH THE CONTACTS
     public void GetUserContacts(String uid,final boolean isClassCall){
@@ -91,6 +93,37 @@ public class ContactFetchIntentService extends IntentService {
 
         });
 
+    }
+
+
+    public void CheckIfUserHasContactRequest(){
+        dbRef = FirebaseDatabase.getInstance().getReference("Users");
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                //iterate through db and check if the number the user just used to sign up exists already
+                boolean isInDb = false;
+                for(DataSnapshot ds: dataSnapshot.getChildren()){
+                    String currentNo = ds.child("number").getValue(String.class);
+                    String uid = ds.getKey();
+                    if(true){
+                        //check if the user already sent a contact request
+                        if(ds.child("ReceivedContactRequests").hasChildren()){
+                            Log.d("ALREADYIN", "Already in db");
+                            Toast.makeText(ContactScreen.this, "Already Sent!", Toast.LENGTH_SHORT).show();
+                        }else{
+                            //nothing new
+                        }
+                        searchedNumber = "";
+                        txtSearchNumber.setText("");
+                        break;
+                    }
+
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        });
     }
 
 }
