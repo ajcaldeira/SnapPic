@@ -117,7 +117,7 @@ public class ContactFetchIntentService extends IntentService {
                             Log.d("HASREQ", "HAS REQUEST: " + dataSnapshot.child("ReceivedContactRequests").getChildrenCount());
                             //new requests
                             int noContactReq = (int)dataSnapshot.child("ReceivedContactRequests").getChildrenCount();
-                            updateNumContactReq(noContactReq );
+                            updateNumContactReq(noContactReq);
                         }else{
                             //nothing new
                             Log.d("HASREQ", "HAS NO REQUEST");

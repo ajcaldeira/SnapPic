@@ -2,20 +2,18 @@ package com.example.snappic;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -24,22 +22,14 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.Date;
 
 public class ContactScreen extends AppCompatActivity  {
 
@@ -58,9 +48,11 @@ public class ContactScreen extends AppCompatActivity  {
     ArrayList<Contacts> arrayList = new ArrayList<>();
     EditText txtSearchNumber;
     Button btnAddContact;
+    ImageButton btnContactAlert;
     //POP UP
     Dialog myDialog;
     Dialog myContactDialog;
+    Dialog newContactDialog;
     ImageButton btnPopClose;
     ImageButton btnNewContact;
     TextView txtPopName;
@@ -70,8 +62,11 @@ public class ContactScreen extends AppCompatActivity  {
     public static final String SHARED_PREFS = "ContactSP";
     public static final String SHARED_PREFS_SPECIFIC = "SpecificSP";
 
-
-
+    //recycler view
+    private RecyclerView newContRecycler;
+    private RecyclerView.Adapter newContRecyclerAdapter;//provides only as many items as we currently need
+    private RecyclerView.LayoutManager newContRecyclerLayoutManager;//provides only as many items as we currently need
+    final ArrayList<New_contact_item> New_contact_items = new ArrayList<>();
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +86,18 @@ public class ContactScreen extends AppCompatActivity  {
         //POP UP
         myDialog = new Dialog(this);
         myContactDialog = new Dialog(this);
+        newContactDialog = new Dialog(this);
         btnPopClose = findViewById(R.id.btnPopClose);
+
+
+        //new contact recycler view and items:
+        btnContactAlert = findViewById(R.id.btnContactAlert);
+
+        //New_contact_items.add(new New_contact_item("Angelo","+447708521254","D7h7d7dgi4rw86dw3r"));
+
+
+
+
 
         listContacts.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -152,7 +158,89 @@ public class ContactScreen extends AppCompatActivity  {
             }
         });
 
+        btnContactAlert.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                newContactDialog.setContentView(R.layout.new_contact_recycler);
+                newContRecycler = newContactDialog.findViewById(R.id.contactRecyclerView);
+                newContRecycler.setHasFixedSize(true);//recycler view will not change size no matter how many items are in it - better performance: https://www.youtube.com/watch?v=17NbUcEts9c 11:50
+                setUpRecyclerView();
+                newContactDialog.show();
 
+                //first pass 0 as it is the val for drag and drop
+                new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+
+
+                    @Override
+                    public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder viewHolder1) {
+                        return false;//drag and drop
+                    }
+
+                    @Override
+                    public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+
+                        switch(direction){
+                            case 4:
+                                //delete item
+                                int position = viewHolder.getAdapterPosition();
+                                //deleteRecyclerViewItem(0);
+                                //New_contact_item currentUser = new New_contact_item();
+                                New_contact_item currentUser = New_contact_items.get(position);
+                                String uid = currentUser.getUID();
+
+
+                                setUpRecyclerView();//reset the view so there are no gaps
+
+                                Toast.makeText(ContactScreen.this, "Deleted Request " + uid  + " "+ String.valueOf(position), Toast.LENGTH_LONG).show();
+                                break;
+                            case 8:
+                                setUpRecyclerView();//reset the view so there are no gaps
+                                Toast.makeText(ContactScreen.this, "Accepted Request", Toast.LENGTH_SHORT).show();
+                                break;
+                        }
+
+                        //left is 4
+
+
+                        //right is 8
+                    }
+                }).attachToRecyclerView(newContRecycler);
+
+            }
+        });
+    }
+    public void getContactRequest(){
+        dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("ReceivedContactRequests");
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for(DataSnapshot ds: dataSnapshot.getChildren()){
+
+                    //get the contacts name and number
+                    String currentName = ds.child("Name").getValue().toString();
+                    String currentNumber = ds.child("Number").getValue().toString();
+                    String uid = ds.getKey();
+                    New_contact_items.add(new New_contact_item(currentName,currentNumber,uid));
+                    Log.d("MYGETTHEM",currentName + " " + currentNumber + " " + uid);
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+        });
+    }
+    public void deleteContactRequest(){
+
+    }
+    public void setUpRecyclerView(){
+        newContRecyclerLayoutManager = new LinearLayoutManager(ContactScreen.this);
+        newContRecyclerAdapter = new New_contact_recycler_adapter(New_contact_items);
+        newContRecycler.setLayoutManager(newContRecyclerLayoutManager);
+        newContRecycler.setAdapter(newContRecyclerAdapter);
+        btnContactAlert = findViewById(R.id.btnContactAlert);
+    }
+
+
+    public void deleteRecyclerViewItem(int position){
 
     }
 
@@ -162,6 +250,8 @@ public class ContactScreen extends AppCompatActivity  {
         SharedPreferences contactSharedPrefReq = getSharedPreferences("ContactREQ", MODE_PRIVATE);
         int currentREQ = contactSharedPrefReq.getInt("numOfContactsRequests",0);
         txtNewContacts.setText(String.valueOf(currentREQ));
+        New_contact_items.clear();//clear the array so it doesnt duplicate whats in it when the phone is locked and unlocked on the screen
+        getContactRequest();
     }
 
     public void AddNewContact(View v){
