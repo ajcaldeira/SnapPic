@@ -37,6 +37,7 @@
         android:layout_width="199dp"
         android:layout_height="wrap_content"
         android:background="@color/colorLightPink"
+        android:onClick="deleteContactInContacts"
         android:text="Delete Contact"
         app:layout_constraintBottom_toBottomOf="@+id/view"
         app:layout_constraintEnd_toEndOf="@+id/view"

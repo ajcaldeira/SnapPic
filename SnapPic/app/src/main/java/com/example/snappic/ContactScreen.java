@@ -34,9 +34,10 @@ import java.util.ArrayList;
 
 public class ContactScreen extends AppCompatActivity  {
 
-    public int ARRAY_SIZE;
-    public int NO_CONTACTS;
-    public int USERS_TO_ADD = 1;
+    private int ARRAY_SIZE;
+    private int NO_CONTACTS;
+    private String UID_TO_DELETE;
+    private int USERS_TO_ADD = 1;
     private float x1,x2;
     static final int MIN_DISTANCE = 150;
 
@@ -47,6 +48,7 @@ public class ContactScreen extends AppCompatActivity  {
     ProgressBar progressBarContact;
     DatabaseReference dbRef;
     DatabaseReference dbRefAdd;
+    DatabaseReference dbRefADelete;
     DatabaseReference dbContacts;
     DatabaseReference dbContactsSingleForeground;
     ArrayList<Contacts> arrayList = new ArrayList<>();
@@ -144,6 +146,7 @@ public class ContactScreen extends AppCompatActivity  {
                 txtPopName.setText(contact.getName());
                 txtPopPhoneNo = myDialog.findViewById(R.id.txtPopPhoneNo);
                 txtPopPhoneNo.setText(contact.getNumber());
+                UID_TO_DELETE = contact.getNumber();
                 myDialog.show();
             }
 
@@ -219,8 +222,6 @@ public class ContactScreen extends AppCompatActivity  {
                                 Log.d("ARRAYLISTSIZE", "case 8 : " + String.valueOf(arrayList.size()));
                                 //3.remove from db
                                 deleteContactRequest(uid);
-                                Toast.makeText(ContactScreen.this, "right!", Toast.LENGTH_SHORT).show();
-
 
                                 break;
                         }
@@ -265,6 +266,43 @@ public class ContactScreen extends AppCompatActivity  {
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
+    }
+    //ONCLICK for delete contact button when user selects a contact in their list
+    public void deleteContactInContacts(View v){
+        String SHARED_PREFS = getSharedPrefContactVar();
+        SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+
+        //shared prefs with uid linked to phone number
+        SharedPreferences contactSharedPrefsSpecific = getSharedPreferences(SHARED_PREFS_SPECIFIC, MODE_PRIVATE);
+        int noContacts = contactSharedPref.getInt("noContacts",0);
+        int loop_Incrementer = 0;
+        while(loop_Incrementer != noContacts){
+            String spName = "cUID" + String.valueOf(loop_Incrementer);
+            String uid = contactSharedPref.getString(spName,"");
+            String userNumber = contactSharedPrefsSpecific.getString(uid,"");
+            if(userNumber.equals(UID_TO_DELETE)){
+                //if the number the user tapped on is equal to the current shared pref then end the loop
+                dbRefADelete = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Contacts").child(uid);
+                dbRefADelete.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        //delete contact and children with the uid specified
+                        dataSnapshot.getRef().removeValue();
+
+                        return;
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {}
+
+                });
+
+
+
+                break;
+            }else {
+                loop_Incrementer++;
+            }
+        }
     }
     public void deleteContactRequest(String currentUID){
         dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("ReceivedContactRequests").child(currentUID);
