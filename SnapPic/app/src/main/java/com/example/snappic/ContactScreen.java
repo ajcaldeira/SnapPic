@@ -35,6 +35,7 @@ import java.util.ArrayList;
 public class ContactScreen extends AppCompatActivity  {
 
     public int ARRAY_SIZE;
+    public int NO_CONTACTS;
     public int USERS_TO_ADD = 1;
     private float x1,x2;
     static final int MIN_DISTANCE = 150;
@@ -47,7 +48,7 @@ public class ContactScreen extends AppCompatActivity  {
     DatabaseReference dbRef;
     DatabaseReference dbRefAdd;
     DatabaseReference dbContacts;
-    DatabaseReference dbContactsSingle;
+    DatabaseReference dbContactsSingleForeground;
     ArrayList<Contacts> arrayList = new ArrayList<>();
     EditText txtSearchNumber;
     Button btnAddContact;
@@ -87,7 +88,6 @@ public class ContactScreen extends AppCompatActivity  {
         btnAddContact = findViewById(R.id.btnAddContact);
         mAuth = FirebaseAuth.getInstance();
         String uid = mAuth.getUid();
-        GetUserContacts(uid,false);
 
         //POP UP
         myDialog = new Dialog(this);
@@ -214,9 +214,14 @@ public class ContactScreen extends AppCompatActivity  {
                                 //2.add to contacts
                                 addUserToContacts(uid,name,number);
 
+                                loadSharedPrefNoContacts();
+                                GetUserContacts(mAuth.getUid(),false);
+                                Log.d("ARRAYLISTSIZE", "case 8 : " + String.valueOf(arrayList.size()));
                                 //3.remove from db
                                 deleteContactRequest(uid);
                                 Toast.makeText(ContactScreen.this, "right!", Toast.LENGTH_SHORT).show();
+
+
                                 break;
                         }
 
@@ -309,8 +314,12 @@ public class ContactScreen extends AppCompatActivity  {
     protected void onStart() {
         super.onStart();
         Intent serviceIntent = new Intent(ContactScreen.this, ContactFetchIntentService.class);
+        GetUserContacts(mAuth.getUid(),false);
         startService(serviceIntent);
         changeNumberOfContactRequestsUI();
+        SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
+        NO_CONTACTS = contactSharedPref.getInt("noContacts",0);
+
     }
 
     public void changeNumberOfContactRequestsUI(){
@@ -431,51 +440,59 @@ public class ContactScreen extends AppCompatActivity  {
         specificEditor.apply();
     }
 
+
     public String LoadSharedPrefs(String spName,String spKey){
         SharedPreferences contactSharedPref = getSharedPreferences(spName, MODE_PRIVATE);
         String currentSP = contactSharedPref.getString(spKey,"");
 
         return currentSP;
     }
+    public void loadSharedPrefNoContacts(){
+        SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
+        NO_CONTACTS = contactSharedPref.getInt("noContacts",0);
+    }
 
 
 //TRYING TO GET THE USERS CONTATCS, FIRST GET THE USER WE WANNA GET THE CONTACTS OF THEN TRY ITTERATE THROUGH THE CONTACTS
     public void GetUserContacts(String uid,final boolean isClassCall){
         //GET THE USER'S CONTACTS
-        dbRef = FirebaseDatabase.getInstance().getReference("Users");
-        dbContacts = dbRef.child(uid);
-        dbContactsSingle = dbContacts.child("Contacts");
-        dbContactsSingle.addValueEventListener(new ValueEventListener() {
+        arrayList.clear();
+
+        //dbRef = ;
+//        dbContacts = ;
+        dbContactsSingleForeground = FirebaseDatabase.getInstance().getReference("Users").child(uid).child("Contacts");
+        dbContactsSingleForeground.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 //iterate through db and check if the number the user just used to sign up exists already
-
+                arrayList.clear();
                 counter = 0;
                 for(DataSnapshot userSnapshot: dataSnapshot.getChildren()){
-                    User users = userSnapshot.getValue(User.class);
-                    String dbNumber = users.number;
-                    String dbName = users.name;
-                    //gets UID from parent node in DB
-                    String cUID = userSnapshot.getKey();
-                    //create contact object and pass the data into it
-                    Contacts contact = new Contacts(dbName, dbNumber);
+                    if(counter > NO_CONTACTS){
+                        break;
+                    }else {
+                        User users = userSnapshot.getValue(User.class);
+                        String dbNumber = users.number;
+                        String dbName = users.name;
+                        //gets UID from parent node in DB
+                        String cUID = userSnapshot.getKey();
+                        //create contact object and pass the data into it
+                        Contacts contact = new Contacts(dbName, dbNumber);
 
-                    String spName = "cUID" + String.valueOf(counter);
-                    String contactSPRef = getSharedPrefContactVar();
-                    arrayList.add(contact);
-                    SaveSharedPrefs(spName,cUID,dbName,contactSPRef,dbNumber);
-                    counter++;
+                        String spName = "cUID" + String.valueOf(counter);
+                        String contactSPRef = getSharedPrefContactVar();
+                        arrayList.add(contact);
+                        SaveSharedPrefs(spName, cUID, dbName, contactSPRef, dbNumber);
+                        counter++;
+                    }
                 }
                 if(!isClassCall){
                     progressBarContact.setVisibility(View.INVISIBLE);
                     ContactsListAdapter adapter = new ContactsListAdapter(ContactScreen.this, R.layout.custom_layout, arrayList);
                     listContacts.setAdapter(adapter);
+
+                    Log.d("ARRAYLISTSIZE", String.valueOf(arrayList.size()));
                 }
-
-
-                    //ArrayAdapter arrayAdapter = new ArrayAdapter(ContactScreen.this, android.R.layout.simple_list_item_1, arrayList);
-                    //listContacts.setAdapter(arrayAdapter);
-
             }
 
 

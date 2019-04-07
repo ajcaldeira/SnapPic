@@ -54,6 +54,7 @@ public class ContactFetchIntentService extends IntentService {
         GetUserContacts(uid,false);
         CheckIfUserHasContactRequest();
     }
+
     //TRYING TO GET THE USERS CONTATCS, FIRST GET THE USER WE WANNA GET THE CONTACTS OF THEN TRY ITTERATE THROUGH THE CONTACTS
     public void GetUserContacts(String uid,final boolean isClassCall){
         //GET THE USER'S CONTACTS
@@ -73,7 +74,7 @@ public class ContactFetchIntentService extends IntentService {
                     //gets UID from parent node in DB
                     String cUID = userSnapshot.getKey();
                     //create contact object and pass the data into it
-                    Contacts contact = new Contacts(dbName, dbNumber);
+                    //Contacts contact = new Contacts(dbName, dbNumber);
 
                     String spName = "cUID" + String.valueOf(counter);
                     String contactSPRef = getSharedPrefContactVar();
@@ -84,6 +85,7 @@ public class ContactFetchIntentService extends IntentService {
                 SharedPreferences.Editor editor = contactSharedPref.edit();
                 editor.putInt("noContacts", counter);
                 editor.apply();
+
             }
 
 
