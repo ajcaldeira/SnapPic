@@ -35,6 +35,7 @@ import java.util.ArrayList;
 public class ContactScreen extends AppCompatActivity  {
 
     public int ARRAY_SIZE;
+    public int USERS_TO_ADD = 1;
     private float x1,x2;
     static final int MIN_DISTANCE = 150;
 
@@ -44,6 +45,7 @@ public class ContactScreen extends AppCompatActivity  {
     TextView txtNewContacts;
     ProgressBar progressBarContact;
     DatabaseReference dbRef;
+    DatabaseReference dbRefAdd;
     DatabaseReference dbContacts;
     DatabaseReference dbContactsSingle;
     ArrayList<Contacts> arrayList = new ArrayList<>();
@@ -177,26 +179,44 @@ public class ContactScreen extends AppCompatActivity  {
 
                     @Override
                     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-
+                        New_contact_item currentUser;
+                        int position;
+                        String uid;
                         switch(direction){
                             case 4:
                                 //delete item
-                                int position = viewHolder.getAdapterPosition();
+                                position = viewHolder.getAdapterPosition();
                                 //deleteRecyclerViewItem(0);
                                 //New_contact_item currentUser = new New_contact_item();
-                                New_contact_item currentUser = New_contact_items.get(position);
-                                String uid = currentUser.getUID();
+                                currentUser = New_contact_items.get(position);
+                                uid = currentUser.getUID();
                                 ARRAY_SIZE--;
                                 txtNewContacts.setText(String.valueOf(ARRAY_SIZE));
                                 New_contact_items.clear();
                                 setUpRecyclerView();
                                 deleteContactRequest(uid);
-
-
                                 break;
                             case 8:
-                                setUpRecyclerView();//reset the view so there are no gaps
-                                Toast.makeText(ContactScreen.this, "Accepted Request", Toast.LENGTH_SHORT).show();
+                                USERS_TO_ADD = 1;
+                                //accept contact request
+                                //GET POS and put uid into a variable
+                                position = viewHolder.getAdapterPosition();
+                                currentUser = New_contact_items.get(position);
+                                uid = currentUser.getUID();
+                                String name = currentUser.getNewContactName();
+                                String number  = currentUser.getNewContactNumber();
+                                //1. remove it from the array
+                                ARRAY_SIZE--;
+                                txtNewContacts.setText(String.valueOf(ARRAY_SIZE));
+                                New_contact_items.clear();
+                                setUpRecyclerView();
+
+                                //2.add to contacts
+                                addUserToContacts(uid,name,number);
+
+                                //3.remove from db
+                                deleteContactRequest(uid);
+                                Toast.makeText(ContactScreen.this, "right!", Toast.LENGTH_SHORT).show();
                                 break;
                         }
 
@@ -215,7 +235,6 @@ public class ContactScreen extends AppCompatActivity  {
     }
     public void getContactRequest(){
         New_contact_items.clear();
-        //Log.d("DELETEDTHEM", "size after clear: " + String.valueOf(New_contact_items.size()));
         dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("ReceivedContactRequests");
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -249,28 +268,36 @@ public class ContactScreen extends AppCompatActivity  {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //delete contact and children with the uid specified
                 dataSnapshot.getRef().removeValue();
-                //New_contact_items.clear();
-                //setUpRecyclerView();
+
                 return;
             }
-
-
-
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
 
         });
     }
-    public void resetRecyclerView(){
-        newContRecyclerLayoutManager = null;
-        newContRecyclerAdapter = null;
-        newContRecycler.setLayoutManager(null);
-        newContRecycler.setAdapter(null);
+    public void addUserToContacts(final String currentUID, final String currentName, final String currentNumber){
+        dbRefAdd = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Contacts");
+        dbRefAdd.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                if(USERS_TO_ADD <= 1){
+                    USERS_TO_ADD++;
+                    dbRefAdd.child(currentUID).child("name").setValue(currentName);
+                    dbRefAdd.child(currentUID).child("number").setValue(currentNumber);
+                    //Log.d("ADDEDTOCONATCTS", "Added: " + currentName);
+                    return;
+                }
+
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+
+        });
     }
 
     public void setUpRecyclerView(){
-        //resetRecyclerView();
         newContRecyclerLayoutManager = new LinearLayoutManager(ContactScreen.this);
         newContRecyclerAdapter = new New_contact_recycler_adapter(New_contact_items);
         newContRecycler.setLayoutManager(newContRecyclerLayoutManager);
