@@ -2,6 +2,7 @@ package com.example.snappic;
 
 import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
@@ -33,7 +34,7 @@ import java.util.ArrayList;
 
 public class ContactScreen extends AppCompatActivity  {
 
-
+    public int ARRAY_SIZE;
     private float x1,x2;
     static final int MIN_DISTANCE = 150;
 
@@ -71,6 +72,9 @@ public class ContactScreen extends AppCompatActivity  {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        ARRAY_SIZE = 1;
+
         setContentView(R.layout.activity_contact_screen);
         txtContName = findViewById(R.id.txtContName);
         txtContNumber = findViewById(R.id.txtContNumber);
@@ -92,12 +96,6 @@ public class ContactScreen extends AppCompatActivity  {
 
         //new contact recycler view and items:
         btnContactAlert = findViewById(R.id.btnContactAlert);
-
-        //New_contact_items.add(new New_contact_item("Angelo","+447708521254","D7h7d7dgi4rw86dw3r"));
-
-
-
-
 
         listContacts.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -164,8 +162,9 @@ public class ContactScreen extends AppCompatActivity  {
                 newContactDialog.setContentView(R.layout.new_contact_recycler);
                 newContRecycler = newContactDialog.findViewById(R.id.contactRecyclerView);
                 newContRecycler.setHasFixedSize(true);//recycler view will not change size no matter how many items are in it - better performance: https://www.youtube.com/watch?v=17NbUcEts9c 11:50
-                setUpRecyclerView();
                 newContactDialog.show();
+                getContactRequest();
+
 
                 //first pass 0 as it is the val for drag and drop
                 new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -187,11 +186,13 @@ public class ContactScreen extends AppCompatActivity  {
                                 //New_contact_item currentUser = new New_contact_item();
                                 New_contact_item currentUser = New_contact_items.get(position);
                                 String uid = currentUser.getUID();
+                                ARRAY_SIZE--;
+                                txtNewContacts.setText(String.valueOf(ARRAY_SIZE));
+                                New_contact_items.clear();
+                                setUpRecyclerView();
+                                deleteContactRequest(uid);
 
 
-                                setUpRecyclerView();//reset the view so there are no gaps
-
-                                Toast.makeText(ContactScreen.this, "Deleted Request " + uid  + " "+ String.valueOf(position), Toast.LENGTH_LONG).show();
                                 break;
                             case 8:
                                 setUpRecyclerView();//reset the view so there are no gaps
@@ -208,30 +209,68 @@ public class ContactScreen extends AppCompatActivity  {
 
             }
         });
+        Intent serviceIntent = new Intent(ContactScreen.this, ContactFetchIntentService.class);
+        startService(serviceIntent);
+
     }
     public void getContactRequest(){
+        New_contact_items.clear();
+        //Log.d("DELETEDTHEM", "size after clear: " + String.valueOf(New_contact_items.size()));
         dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("ReceivedContactRequests");
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for(DataSnapshot ds: dataSnapshot.getChildren()){
+                if(true){
+                    for(DataSnapshot ds: dataSnapshot.getChildren()){
 
-                    //get the contacts name and number
-                    String currentName = ds.child("Name").getValue().toString();
-                    String currentNumber = ds.child("Number").getValue().toString();
-                    String uid = ds.getKey();
-                    New_contact_items.add(new New_contact_item(currentName,currentNumber,uid));
-                    Log.d("MYGETTHEM",currentName + " " + currentNumber + " " + uid);
+                        //get the contacts name and number
+                        String currentName = ds.child("Name").getValue().toString();
+                        String currentNumber = ds.child("Number").getValue().toString();
+                        String uid = ds.getKey();
+                        if(New_contact_items.size() == ARRAY_SIZE){
+                            break;
+                        }else{
+                            New_contact_items.add(new New_contact_item(currentName,currentNumber,uid));
+                        }
+
+                    }
+                    setUpRecyclerView();
+                    Log.d("DELETEDTHEM", "new size: " + String.valueOf(New_contact_items.size()));
                 }
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
     }
-    public void deleteContactRequest(){
+    public void deleteContactRequest(String currentUID){
+        dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("ReceivedContactRequests").child(currentUID);
+        dbRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                //delete contact and children with the uid specified
+                dataSnapshot.getRef().removeValue();
+                //New_contact_items.clear();
+                //setUpRecyclerView();
+                return;
+            }
 
+
+
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+
+        });
     }
+    public void resetRecyclerView(){
+        newContRecyclerLayoutManager = null;
+        newContRecyclerAdapter = null;
+        newContRecycler.setLayoutManager(null);
+        newContRecycler.setAdapter(null);
+    }
+
     public void setUpRecyclerView(){
+        //resetRecyclerView();
         newContRecyclerLayoutManager = new LinearLayoutManager(ContactScreen.this);
         newContRecyclerAdapter = new New_contact_recycler_adapter(New_contact_items);
         newContRecycler.setLayoutManager(newContRecyclerLayoutManager);
@@ -239,19 +278,20 @@ public class ContactScreen extends AppCompatActivity  {
         btnContactAlert = findViewById(R.id.btnContactAlert);
     }
 
-
-    public void deleteRecyclerViewItem(int position){
-
-    }
-
     @Override
     protected void onStart() {
         super.onStart();
+        Intent serviceIntent = new Intent(ContactScreen.this, ContactFetchIntentService.class);
+        startService(serviceIntent);
+        changeNumberOfContactRequestsUI();
+    }
+
+    public void changeNumberOfContactRequestsUI(){
         SharedPreferences contactSharedPrefReq = getSharedPreferences("ContactREQ", MODE_PRIVATE);
         int currentREQ = contactSharedPrefReq.getInt("numOfContactsRequests",0);
-        txtNewContacts.setText(String.valueOf(currentREQ));
-        New_contact_items.clear();//clear the array so it doesnt duplicate whats in it when the phone is locked and unlocked on the screen
-        getContactRequest();
+        ARRAY_SIZE = currentREQ;
+        txtNewContacts.setText(String.valueOf(ARRAY_SIZE));
+        //Log.d("SPNOREQUESTS", "changeNumberOfContactRequestsUI: DETECT " + currentREQ);
     }
 
     public void AddNewContact(View v){
