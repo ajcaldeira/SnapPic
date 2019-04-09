@@ -16,6 +16,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class ContactFetchIntentService extends IntentService {
 
@@ -23,9 +26,15 @@ public class ContactFetchIntentService extends IntentService {
     DatabaseReference dbRef;
     DatabaseReference dbContacts;
     DatabaseReference dbContactsSingle;
+    DatabaseReference dbCheckForMessages;
     private int counter;
     public static final String SHARED_PREFS = "ContactSP";
     public static final String SHARED_PREFS_REQ_CONTACTS = "ContactREQ";
+    public static final String SHARED_PREFS_MESSAGES = "messagesSP";
+
+
+    // This schedule a runnable task every 2 minutes
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -53,7 +62,22 @@ public class ContactFetchIntentService extends IntentService {
 
         GetUserContacts(uid,false);
         CheckIfUserHasContactRequest();
+        checkUserHasMessages();
+        Log.d("ISMYSERVICERUNNING", "RUNNING!");
     }
+
+    public void checkUserHasMessages(){
+        //number of contacts
+        SharedPreferences noContactSharedPref = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
+        int noOfContacts = noContactSharedPref.getInt("noContacts",0);
+
+        for(int i = 0; i < noOfContacts; i++){
+            String currentUID = noContactSharedPref.getString("cUID" + i,"");
+            checkUserHasMessagesDB(currentUID);
+
+        }
+    }
+
 
     //TRYING TO GET THE USERS CONTATCS, FIRST GET THE USER WE WANNA GET THE CONTACTS OF THEN TRY ITTERATE THROUGH THE CONTACTS
     public void GetUserContacts(String uid,final boolean isClassCall){
@@ -132,6 +156,32 @@ public class ContactFetchIntentService extends IntentService {
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
+    }
+
+    public void updateSharedPrefsIfMessages(int noMessages,String currentContactUID){
+        SharedPreferences contactMessagesSP = getSharedPreferences(SHARED_PREFS_MESSAGES,MODE_PRIVATE);
+        SharedPreferences.Editor editor = contactMessagesSP.edit();
+        editor.putInt(currentContactUID, noMessages);
+        editor.apply();
+    }
+
+    public void checkUserHasMessagesDB(final String cUID){
+        dbCheckForMessages = FirebaseDatabase.getInstance().getReference("Users");
+        dbCheckForMessages.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                int noMessages = (int)dataSnapshot.child(mAuth.getUid()).child("Received").child(cUID).getChildrenCount();
+                updateSharedPrefsIfMessages(noMessages,cUID);
+                Log.d("TESTTHINGINHHHHGHG", "onDataChange: " + noMessages);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+
+        });
+
     }
 
 }

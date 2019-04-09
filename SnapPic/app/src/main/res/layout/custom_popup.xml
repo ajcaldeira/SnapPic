@@ -60,13 +60,13 @@
         app:layout_constraintStart_toStartOf="@+id/btnPopDeleteContact" />
 
     <Button
-        android:id="@+id/btnPopSendMessage2"
+        android:id="@+id/btnPopViewMessages"
         android:layout_width="199dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="12dp"
         android:background="@color/colorLightBlue"
-        android:onClick="sendSnap"
+        android:onClick="viewMessages"
         android:text="View Messages"
         app:layout_constraintBottom_toTopOf="@+id/btnPopDeleteContact"
         app:layout_constraintEnd_toEndOf="@+id/btnPopDeleteContact"

@@ -28,21 +28,25 @@ public class ContactsListAdapter extends ArrayAdapter<Contacts> {
         //gets view and attaches to list view
         String name = getItem(position).getName();
         String number = getItem(position).getNumber();
+        int noMessages = getItem(position).getNoMessages();
 
         //create contact object with the info
-        Contacts contact = new Contacts(name, number);
+        Contacts contact = new Contacts(name, number, noMessages);
 
         LayoutInflater inflater = LayoutInflater.from(mContext);
         convertView = inflater.inflate(mResource, parent, false);
 
         TextView txtContName = convertView.findViewById(R.id.txtContName);
         TextView txtContNumber = convertView.findViewById(R.id.txtContNumber);
+        TextView txtNoNotifications = convertView.findViewById(R.id.txtNoNotifications);
 
         txtContName.setText(name);
         txtContNumber.setText(number);
+        txtNoNotifications.setText(String.valueOf(noMessages));
 
         return convertView;
     }
+
 }
 
 

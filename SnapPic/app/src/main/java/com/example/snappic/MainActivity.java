@@ -429,6 +429,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onConfigureFailed(CameraCaptureSession session) {
                     Toast.makeText(MainActivity.this, "Failed", Toast.LENGTH_SHORT).show();
+
                 }
             },null);
 
@@ -608,6 +609,7 @@ public class MainActivity extends AppCompatActivity {
             //user not logged in
            BackToLogin();
         }
+
         StartBackgroundThread();
         Intent serviceIntent = new Intent(MainActivity.this, ContactFetchIntentService.class);
         startService(serviceIntent);
@@ -654,8 +656,7 @@ public class MainActivity extends AppCompatActivity {
         btnIsSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, MainActivity.class);
-                startActivity(intent);
+
             }
         });
         //swap camera

@@ -31,11 +31,15 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ContactScreen extends AppCompatActivity  {
-
+    private static final String SHARED_PREFS_MESSAGES = "messagesSP";
     private int ARRAY_SIZE;
     private int NO_CONTACTS;
+    private int NO_OF_MESSAGES;
     private String UID_TO_DELETE;
     private int USERS_TO_ADD = 1;
     private float x1,x2;
@@ -49,16 +53,20 @@ public class ContactScreen extends AppCompatActivity  {
     DatabaseReference dbRef;
     DatabaseReference dbRefAdd;
     DatabaseReference dbRefADelete;
+    DatabaseReference dbRefViewMessage;
     DatabaseReference dbContacts;
+    DatabaseReference dbCheckForMessages;
     DatabaseReference dbContactsSingleForeground;
     ArrayList<Contacts> arrayList = new ArrayList<>();
     EditText txtSearchNumber;
     Button btnAddContact;
     ImageButton btnContactAlert;
+
     //POP UP
     Dialog myDialog;
     Dialog myContactDialog;
     Dialog newContactDialog;
+    Dialog viewMessageDialog;
     ImageButton btnPopClose;
     ImageButton btnNewContact;
     TextView txtPopName;
@@ -95,8 +103,8 @@ public class ContactScreen extends AppCompatActivity  {
         myDialog = new Dialog(this);
         myContactDialog = new Dialog(this);
         newContactDialog = new Dialog(this);
+        viewMessageDialog = new Dialog(this);
         btnPopClose = findViewById(R.id.btnPopClose);
-
 
         //new contact recycler view and items:
         btnContactAlert = findViewById(R.id.btnContactAlert);
@@ -320,6 +328,8 @@ public class ContactScreen extends AppCompatActivity  {
         });
     }
     public void addUserToContacts(final String currentUID, final String currentName, final String currentNumber){
+
+
         dbRefAdd = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Contacts");
         dbRefAdd.addValueEventListener(new ValueEventListener() {
             @Override
@@ -327,9 +337,12 @@ public class ContactScreen extends AppCompatActivity  {
 
                 if(USERS_TO_ADD <= 1){
                     USERS_TO_ADD++;
+                    //add THEM to MY list
                     dbRefAdd.child(currentUID).child("name").setValue(currentName);
                     dbRefAdd.child(currentUID).child("number").setValue(currentNumber);
-                    //Log.d("ADDEDTOCONATCTS", "Added: " + currentName);
+
+                    //add ME to THEIR list
+
                     return;
                 }
 
@@ -423,6 +436,47 @@ public class ContactScreen extends AppCompatActivity  {
         });
 
     }
+
+    public void viewMessages(View v){
+        String SHARED_PREFS = getSharedPrefContactVar();
+        SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+
+        //shared prefs with uid linked to phone number
+        SharedPreferences contactSharedPrefsSpecific = getSharedPreferences(SHARED_PREFS_SPECIFIC, MODE_PRIVATE);
+        int noContacts = contactSharedPref.getInt("noContacts",0);
+        int loop_Incrementer = 0;
+        while(loop_Incrementer != noContacts){
+            String spName = "cUID" + String.valueOf(loop_Incrementer);
+            String uid = contactSharedPref.getString(spName,"");
+            String userNumber = contactSharedPrefsSpecific.getString(uid,"");
+            if(userNumber.equals(UID_TO_DELETE)){//use this variable to get the  number and match it to the UID
+                //if the number the user tapped on is equal to the current shared pref then end the loop
+                dbRefViewMessage = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Received").child(uid);
+                dbRefViewMessage.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        //get the image message from db
+                        for(DataSnapshot userSnapshot: dataSnapshot.getChildren()){
+                            //GET EACH MESSAGE FOR THE SPECIFIC USER
+                            Log.d("VIEWMYMESSAGES", userSnapshot.child("mImageUrl").getValue().toString());
+                        }
+
+                        return;
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {}
+
+                });
+
+
+
+                break;
+            }else {
+                loop_Incrementer++;
+            }
+        }
+    }
+
     public void closePopUp(View v){
         myDialog.hide();
     }
@@ -494,10 +548,10 @@ public class ContactScreen extends AppCompatActivity  {
 //TRYING TO GET THE USERS CONTATCS, FIRST GET THE USER WE WANNA GET THE CONTACTS OF THEN TRY ITTERATE THROUGH THE CONTACTS
     public void GetUserContacts(String uid,final boolean isClassCall){
         //GET THE USER'S CONTACTS
-        arrayList.clear();
 
-        //dbRef = ;
-//        dbContacts = ;
+        arrayList.clear();
+        //dbCheckForMessages = FirebaseDatabase.getInstance().getReference("Users");
+        //dbContactsSingleForeground = FirebaseDatabase.getInstance().getReference("Users").child(uid).child("Contacts");
         dbContactsSingleForeground = FirebaseDatabase.getInstance().getReference("Users").child(uid).child("Contacts");
         dbContactsSingleForeground.addValueEventListener(new ValueEventListener() {
             @Override
@@ -514,8 +568,14 @@ public class ContactScreen extends AppCompatActivity  {
                         String dbName = users.name;
                         //gets UID from parent node in DB
                         String cUID = userSnapshot.getKey();
-                        //create contact object and pass the data into it
-                        Contacts contact = new Contacts(dbName, dbNumber);
+
+                        SharedPreferences contactMessagesSP = getSharedPreferences(SHARED_PREFS_MESSAGES,MODE_PRIVATE);
+                        int noMessages = contactMessagesSP.getInt(cUID,0);
+                        Log.d("CUIDMESSAGES", String.valueOf(noMessages));
+
+                        //check if this current contact has send any messages to the current logged in user (me)
+                                                //create contact object and pass the data into it
+                        Contacts contact = new Contacts(dbName, dbNumber, noMessages);
 
                         String spName = "cUID" + String.valueOf(counter);
                         String contactSPRef = getSharedPrefContactVar();
@@ -528,7 +588,6 @@ public class ContactScreen extends AppCompatActivity  {
                     progressBarContact.setVisibility(View.INVISIBLE);
                     ContactsListAdapter adapter = new ContactsListAdapter(ContactScreen.this, R.layout.custom_layout, arrayList);
                     listContacts.setAdapter(adapter);
-
                     Log.d("ARRAYLISTSIZE", String.valueOf(arrayList.size()));
                 }
             }
@@ -542,6 +601,8 @@ public class ContactScreen extends AppCompatActivity  {
         });
 
     }
+
+
 
 
 }

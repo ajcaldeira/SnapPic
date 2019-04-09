@@ -40,9 +40,9 @@ public class SendNotificationJava extends AsyncTask<String,String,String> {
 
 
             JSONObject info = new JSONObject();
-            info.put("title", "Angelo");   // Notification title
-            info.put("body", "Hello Test notification"); // Notification body
-
+            info.put("title", "SnapPic");   // Notification title
+            info.put("body", "New Contact Request! Exciting!"); // Notification body
+            info.put("click_action", "MAINACTIVITYY"); // Notification body
             json.put("notification", info);
 
             OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());

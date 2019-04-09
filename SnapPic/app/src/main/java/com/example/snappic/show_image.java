@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
@@ -221,7 +222,7 @@ public class show_image extends AppCompatActivity {
                                     //String uploadID = dbStoryDate.push().getKey();
                                     dbStoryDate.setValue(upload);
                                     dbStoryDate.child("timestamp").setValue(timestampSend);
-                                    Toast.makeText(show_image.this, "Sending..",Toast.LENGTH_SHORT).show();
+                                    //Toast.makeText(show_image.this, "Sending..",Toast.LENGTH_SHORT).show();
                                 }
                             });
                             //Toast.makeText(show_image.this, taskSnapshot.getMetadata().getReference().getDownloadUrl().toString(),Toast.LENGTH_SHORT).show();
@@ -249,10 +250,13 @@ public class show_image extends AppCompatActivity {
                             }
 
                             String token = task.getResult().getToken();
+                            Log.d("TOKENFIREBASE", token);
 
                             //send notification:
                             new SendNotificationJava(token).execute();
                             Toast.makeText(show_image.this, "Sent!", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(show_image.this, MainActivity.class);
+                            startActivity(intent);
                         }
                     });
         }else{
