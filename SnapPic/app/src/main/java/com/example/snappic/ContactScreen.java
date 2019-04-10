@@ -5,6 +5,9 @@ import android.app.Dialog;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,7 +20,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -29,7 +34,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.squareup.picasso.Picasso;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -58,9 +65,11 @@ public class ContactScreen extends AppCompatActivity  {
     DatabaseReference dbCheckForMessages;
     DatabaseReference dbContactsSingleForeground;
     ArrayList<Contacts> arrayList = new ArrayList<>();
+    ArrayList<String> newMessagesArrayList = new ArrayList<>();
     EditText txtSearchNumber;
     Button btnAddContact;
     ImageButton btnContactAlert;
+
 
     //POP UP
     Dialog myDialog;
@@ -103,7 +112,6 @@ public class ContactScreen extends AppCompatActivity  {
         myDialog = new Dialog(this);
         myContactDialog = new Dialog(this);
         newContactDialog = new Dialog(this);
-        viewMessageDialog = new Dialog(this);
         btnPopClose = findViewById(R.id.btnPopClose);
 
         //new contact recycler view and items:
@@ -257,8 +265,10 @@ public class ContactScreen extends AppCompatActivity  {
                     for(DataSnapshot ds: dataSnapshot.getChildren()){
 
                         //get the contacts name and number
+
                         String currentName = ds.child("Name").getValue().toString();
                         String currentNumber = ds.child("Number").getValue().toString();
+
                         String uid = ds.getKey();
                         if(New_contact_items.size() == ARRAY_SIZE){
                             break;
@@ -440,6 +450,7 @@ public class ContactScreen extends AppCompatActivity  {
     public void viewMessages(View v){
         String SHARED_PREFS = getSharedPrefContactVar();
         SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        myDialog.hide();
 
         //shared prefs with uid linked to phone number
         SharedPreferences contactSharedPrefsSpecific = getSharedPreferences(SHARED_PREFS_SPECIFIC, MODE_PRIVATE);
@@ -451,6 +462,7 @@ public class ContactScreen extends AppCompatActivity  {
             String userNumber = contactSharedPrefsSpecific.getString(uid,"");
             if(userNumber.equals(UID_TO_DELETE)){//use this variable to get the  number and match it to the UID
                 //if the number the user tapped on is equal to the current shared pref then end the loop
+                newMessagesArrayList.clear();
                 dbRefViewMessage = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Received").child(uid);
                 dbRefViewMessage.addValueEventListener(new ValueEventListener() {
                     @Override
@@ -459,6 +471,12 @@ public class ContactScreen extends AppCompatActivity  {
                         for(DataSnapshot userSnapshot: dataSnapshot.getChildren()){
                             //GET EACH MESSAGE FOR THE SPECIFIC USER
                             Log.d("VIEWMYMESSAGES", userSnapshot.child("mImageUrl").getValue().toString());
+                            String imageURL;
+
+                                imageURL = userSnapshot.child("mImageUrl").getValue().toString();
+                                newMessagesArrayList.add(imageURL);
+
+
                         }
 
                         return;
@@ -467,14 +485,14 @@ public class ContactScreen extends AppCompatActivity  {
                     public void onCancelled(@NonNull DatabaseError databaseError) {}
 
                 });
-
-
+                // show The Image in a ImageView
 
                 break;
             }else {
                 loop_Incrementer++;
             }
         }
+
     }
 
     public void closePopUp(View v){
@@ -510,14 +528,12 @@ public class ContactScreen extends AppCompatActivity  {
     public String getSharedPrefContactVar(){
         return SHARED_PREFS;
     }
-
     @Override
     public void onBackPressed() {
         moveTaskToBack(true);
         Intent mainActivity = new Intent(ContactScreen.this,MainActivity.class);
         startActivity(mainActivity);
     }
-
     public void SaveSharedPrefs(String spName, String uid,String spUsersName,String contactSPRef,String spUsersNumber){
         SharedPreferences contactSharedPref = getSharedPreferences(contactSPRef,MODE_PRIVATE);
         SharedPreferences.Editor editor = contactSharedPref.edit();
@@ -531,8 +547,6 @@ public class ContactScreen extends AppCompatActivity  {
         specificEditor.putString(uid,spUsersNumber);
         specificEditor.apply();
     }
-
-
     public String LoadSharedPrefs(String spName,String spKey){
         SharedPreferences contactSharedPref = getSharedPreferences(spName, MODE_PRIVATE);
         String currentSP = contactSharedPref.getString(spKey,"");
@@ -543,8 +557,6 @@ public class ContactScreen extends AppCompatActivity  {
         SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
         NO_CONTACTS = contactSharedPref.getInt("noContacts",0);
     }
-
-
 //TRYING TO GET THE USERS CONTATCS, FIRST GET THE USER WE WANNA GET THE CONTACTS OF THEN TRY ITTERATE THROUGH THE CONTACTS
     public void GetUserContacts(String uid,final boolean isClassCall){
         //GET THE USER'S CONTACTS
@@ -601,8 +613,5 @@ public class ContactScreen extends AppCompatActivity  {
         });
 
     }
-
-
-
 
 }

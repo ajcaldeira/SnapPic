@@ -71,7 +71,6 @@ public class RightScreen extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 frameLayoutFragment.setVisibility(View.INVISIBLE);
-
             }
         });
 
