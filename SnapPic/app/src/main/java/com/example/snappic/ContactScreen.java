@@ -341,21 +341,24 @@ public class ContactScreen extends AppCompatActivity  {
     public void addUserToContacts(final String currentUID, final String currentName, final String currentNumber){
 
 
-        dbRefAdd = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Contacts");
+        dbRefAdd = FirebaseDatabase.getInstance().getReference("Users");
         dbRefAdd.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
 
                 if(USERS_TO_ADD <= 1){
                     USERS_TO_ADD++;
+                    //get my info
+                    String myName = dataSnapshot.child(mAuth.getUid()).child("name").getValue().toString();
+                    String myNumber = dataSnapshot.child(mAuth.getUid()).child("number").getValue().toString();
+
                     //add THEM to MY list
-                    dbRefAdd.child(currentUID).child("name").setValue(currentName);
-                    dbRefAdd.child(currentUID).child("number").setValue(currentNumber);
+                    dbRefAdd.child(mAuth.getUid()).child("Contacts").child(currentUID).child("name").setValue(currentName);
+                    dbRefAdd.child(mAuth.getUid()).child("Contacts").child(currentUID).child("number").setValue(currentNumber);
 
                     //add ME to THEIR list
-                    
-
-
+                    dbRefAdd.child(currentUID).child("Contacts").child(mAuth.getUid()).child("name").setValue(myName);
+                    dbRefAdd.child(currentUID).child("Contacts").child(mAuth.getUid()).child("number").setValue(myNumber);
                     return;
                 }
 
