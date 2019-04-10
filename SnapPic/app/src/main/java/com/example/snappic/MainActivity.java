@@ -9,10 +9,12 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
@@ -89,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     private String CAMERA_FRONT;
     private String CAMERA_FACE;
     private boolean CAMERA_SWAP;
+    private int DEVICE_ROTATION;
     private String mFileName;
     private static final int STATE_PREVIEW = 0;
     private static final int STATE_WAIT_LOCK = 1;
@@ -197,17 +200,14 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
-    //TO GET CAMERA IDs SO WE KNOW WHICH CAM WE HAVE SELECTED
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void SetUpCamera(int width, int height) {
         CameraManager camManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try {
             for (String cameraID : camManager.getCameraIdList()) {
                 CameraCharacteristics cameraCharacteristics = camManager.getCameraCharacteristics(cameraID);
-
-                String debug;
                 if(CAMERA_SWAP){
-                    debug = "true";
+
                     if(CAMERA_FACE.equals("1")){
                         CAMERA_FACE = "0";
                         cameraCharacteristics = camManager.getCameraCharacteristics(CAMERA_FACE);
@@ -216,12 +216,10 @@ public class MainActivity extends AppCompatActivity {
                         cameraCharacteristics = camManager.getCameraCharacteristics(CAMERA_FACE);
                     }
                 }else{
-                    debug = "false";
                     //for its first run ONLY so it starts with front cam always
                     if (cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK) {
                         CAMERA_BACK = cameraID;
                         CAMERA_FACE = CAMERA_BACK;
-                        debug = "false NN";
                         continue; //restart loop
                     }else{
                         CAMERA_FRONT = cameraID;
@@ -237,9 +235,11 @@ public class MainActivity extends AppCompatActivity {
                 //Orientation. portrait or not?
                 int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
                 int totalRotation = senseorToDeviceRotation(cameraCharacteristics, deviceOrientation);
+                Log.d("ROTATIONTAG", String.valueOf(totalRotation));
                 mTotalRotation = totalRotation;
                 //swap rotation if totRotation = 90 or 270. makes bool true else false
                 boolean doSwapRotation = totalRotation == 90 || totalRotation == 270;
+                Log.d("ROTATIONTAG", String.valueOf(doSwapRotation));
                 //getting this width from frame layout (passed when this function is called
                 int rotatedWidth = width;
                 int rotaredHeight = height;
@@ -251,6 +251,10 @@ public class MainActivity extends AppCompatActivity {
                 //map.getoutputsize get a list of the preview resolutions and then we pick the optimal with the frameLayouts w and h
                 //so we may not get the exact resolution, but we get the closest match
                 mPreviewSize = pickBestSize(map.getOutputSizes(SurfaceTexture.class), rotatedWidth, rotaredHeight);
+                //HANDLE 2K AND 4K
+
+
+
                 mImageSize = pickBestSize(map.getOutputSizes(ImageFormat.JPEG), rotatedWidth, rotaredHeight);
                 mImageReader = ImageReader.newInstance(mImageSize.getWidth(),mImageSize.getHeight(), ImageFormat.JPEG,1);
                 mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler);
@@ -260,12 +264,47 @@ public class MainActivity extends AppCompatActivity {
                     mCameraID = cameraID;
                 }
                 //CAMERA_SWAP = false;
+
                 return;
             }
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
+
     }
+
+    //FIXING ORIENTATION
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public void fixOrientation(int width, int height){
+        if(mPreviewSize == null || textureView == null){
+            return;
+        }
+        Log.d("ROTATIONTAG2", "w: " + width + " height: " + height);
+        Log.d("ROTATIONTAG2", "mw: " + width + " mheight: " + height);
+        Matrix matrix = new Matrix();
+        int rotation = getWindowManager().getDefaultDisplay().getRotation();
+        RectF textureRectF = new RectF(0,0,width,height);
+        RectF previewRectF = new RectF(0,0,height,width);
+        float centerX = textureRectF.centerX();
+        float centerY = textureRectF.centerY();
+        if(rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270){
+            Log.d("ROTATIONTAG2", "fixOrientation: " + rotation);
+            previewRectF.offset(centerX ,centerY );
+            matrix.setRectToRect(textureRectF,previewRectF, Matrix.ScaleToFit.FILL);
+            float scale = Math.max(1,1);
+            matrix.postScale(scale,scale,centerX,centerY);
+            matrix.postRotate(90 * (rotation - 2), centerX,centerY);
+            if(rotation == Surface.ROTATION_270 ){
+                matrix.postTranslate(Math.round(((float)width - (float)height)),Math.round(((float)height - (float)width) * 0.5f));
+            }else{
+                matrix.postTranslate(-Math.round(((float)width - (float)height)),-Math.round(((float)height - (float)width) * 0.5f));
+            }
+
+        }
+        textureView.setTransform(matrix);
+
+    }
+
 
     //BACKGROUND THREAD - so it doesn't run on the UI thread and effect ui behaviour
     private HandlerThread mBackgroundHandlerThread;
@@ -408,7 +447,7 @@ public class MainActivity extends AppCompatActivity {
                         CAMERA_FACE = CAMERA_BACK;
                     }
                 }
-                SetUpCamera(mPreviewSize.getWidth(),mPreviewSize.getHeight());
+                SetUpCamera(testWidth,testHeight);
             }
             mCapReqBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 
@@ -593,6 +632,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onStart() {
         super.onStart();
@@ -615,13 +655,27 @@ public class MainActivity extends AppCompatActivity {
         startService(serviceIntent);
 
     }
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // Checks the orientation of the screen
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
+            fixOrientation(mPreviewSize.getWidth(),mPreviewSize.getHeight());
 
+
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+            Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
+            Intent restart = new Intent(MainActivity.this, MainActivity.class);
+            startActivity(restart);
+        }
+    }
     private Button btnSwapCam;
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
@@ -723,13 +777,31 @@ public class MainActivity extends AppCompatActivity {
                     int height = textureView.getMeasuredHeight();
                     testWidth = width;
                     testHeight = height;
-                    SetUpCamera(width,height);
+                    SetUpCamera(testWidth,testHeight);
+                    //make sure orientation is correct
+                    DEVICE_ROTATION = getWindowManager().getDefaultDisplay().getRotation();
+                    if(DEVICE_ROTATION == 1 || DEVICE_ROTATION == 3){
+                        //0 normal
+                        //3 right
+                        //1 left
+                        Log.d("ONCREATEDEVICEROTATION", "onCreate: " + DEVICE_ROTATION);
+                        Log.d("ONCREATEDEVICEROTATION", "width: " + testWidth);
+                        Log.d("ONCREATEDEVICEROTATION", "height: " + testHeight);
+                        fixOrientation(testWidth,testHeight);
+                        //fixOrientation(mPreviewSize.getWidth(),mPreviewSize.getHeight());
+                    }
                 }
             });
 
         }else {
             handlePermissions();
         }
+
+
+
+
+
+
     }
 
 
@@ -828,6 +900,8 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    //then the deivice orientation is turned: https://stackoverflow.com/questions/5726657/how-to-detect-orientation-change-in-layout-in-android
 
 
 

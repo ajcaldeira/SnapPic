@@ -287,6 +287,7 @@ public class ContactScreen extends AppCompatActivity  {
     }
     //ONCLICK for delete contact button when user selects a contact in their list
     public void deleteContactInContacts(View v){
+        myDialog.dismiss();
         String SHARED_PREFS = getSharedPrefContactVar();
         SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
 
@@ -352,6 +353,8 @@ public class ContactScreen extends AppCompatActivity  {
                     dbRefAdd.child(currentUID).child("number").setValue(currentNumber);
 
                     //add ME to THEIR list
+                    
+
 
                     return;
                 }
