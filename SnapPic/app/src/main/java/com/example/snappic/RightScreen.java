@@ -59,7 +59,6 @@ public class RightScreen extends AppCompatActivity {
         fragImgView = findViewById(R.id.fragImgView);
         imgExitStory = findViewById(R.id.imgExitStory);
         frameLayoutFragment = findViewById(R.id.fragCtr);
-
         frameLayoutFragment.setVisibility(View.INVISIBLE);
 
 

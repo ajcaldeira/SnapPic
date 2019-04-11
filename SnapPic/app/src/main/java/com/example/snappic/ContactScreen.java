@@ -45,8 +45,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ContactScreen extends AppCompatActivity  {
     private static final String SHARED_PREFS_MESSAGES = "messagesSP";
     private int ARRAY_SIZE;
+    private boolean DELETING_FLAG;
     private int NO_CONTACTS;
-    private int NO_OF_MESSAGES;
+    private int CURRENT_MESSAGE;
+    private String CURRENT_MESSAGE_USERID;
     private String UID_TO_DELETE;
     private int USERS_TO_ADD = 1;
     private float x1,x2;
@@ -61,16 +63,17 @@ public class ContactScreen extends AppCompatActivity  {
     DatabaseReference dbRefAdd;
     DatabaseReference dbRefADelete;
     DatabaseReference dbRefViewMessage;
+    DatabaseReference dbRefDeleteMessage;
     DatabaseReference dbContacts;
     DatabaseReference dbCheckForMessages;
     DatabaseReference dbContactsSingleForeground;
     ArrayList<Contacts> arrayList = new ArrayList<>();
     ArrayList<String> newMessagesArrayList = new ArrayList<>();
+    ArrayList<String> newMessagesIDArrayList = new ArrayList<>();
     EditText txtSearchNumber;
     Button btnAddContact;
     ImageButton btnContactAlert;
-
-
+    ImageView imgShowMessage;
     //POP UP
     Dialog myDialog;
     Dialog myContactDialog;
@@ -96,7 +99,7 @@ public class ContactScreen extends AppCompatActivity  {
         super.onCreate(savedInstanceState);
 
         ARRAY_SIZE = 1;
-
+        DELETING_FLAG = false;
         setContentView(R.layout.activity_contact_screen);
         txtContName = findViewById(R.id.txtContName);
         txtContNumber = findViewById(R.id.txtContNumber);
@@ -112,6 +115,7 @@ public class ContactScreen extends AppCompatActivity  {
         myDialog = new Dialog(this);
         myContactDialog = new Dialog(this);
         newContactDialog = new Dialog(this);
+        viewMessageDialog = new Dialog(this);
         btnPopClose = findViewById(R.id.btnPopClose);
 
         //new contact recycler view and items:
@@ -338,6 +342,22 @@ public class ContactScreen extends AppCompatActivity  {
 
         });
     }
+    public void deleteMessages(final String currentMessageID){
+        dbRefDeleteMessage = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Received");
+        dbRefDeleteMessage.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                //delete contact and children with the uid specified
+
+                dataSnapshot.child(CURRENT_MESSAGE_USERID).child(currentMessageID).getRef().removeValue();
+
+                return;
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+
+        });
+    }
     public void addUserToContacts(final String currentUID, final String currentName, final String currentNumber){
 
 
@@ -454,10 +474,16 @@ public class ContactScreen extends AppCompatActivity  {
     }
 
     public void viewMessages(View v){
+        DELETING_FLAG = false;//set it to false on click so it shows the messages
+        //the variable above has to be here because of firebase's asynchronous annoyance
         String SHARED_PREFS = getSharedPrefContactVar();
         SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
         myDialog.hide();
-
+        CURRENT_MESSAGE = 0;
+        CURRENT_MESSAGE_USERID = "";
+        Log.d("VIEWMYMESSAGES", "viewMessages: dwdwdwwd");
+        newMessagesArrayList.clear();
+        newMessagesIDArrayList.clear();
         //shared prefs with uid linked to phone number
         SharedPreferences contactSharedPrefsSpecific = getSharedPreferences(SHARED_PREFS_SPECIFIC, MODE_PRIVATE);
         int noContacts = contactSharedPref.getInt("noContacts",0);
@@ -468,21 +494,42 @@ public class ContactScreen extends AppCompatActivity  {
             String userNumber = contactSharedPrefsSpecific.getString(uid,"");
             if(userNumber.equals(UID_TO_DELETE)){//use this variable to get the  number and match it to the UID
                 //if the number the user tapped on is equal to the current shared pref then end the loop
-                newMessagesArrayList.clear();
+                CURRENT_MESSAGE_USERID = uid;
                 dbRefViewMessage = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Received").child(uid);
                 dbRefViewMessage.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         //get the image message from db
+                        int counter = 0;
                         for(DataSnapshot userSnapshot: dataSnapshot.getChildren()){
                             //GET EACH MESSAGE FOR THE SPECIFIC USER
-                            Log.d("VIEWMYMESSAGES", userSnapshot.child("mImageUrl").getValue().toString());
+                            //Log.d("VIEWMYMESSAGES", userSnapshot.child("mImageUrl").getValue().toString());
                             String imageURL;
 
-                                imageURL = userSnapshot.child("mImageUrl").getValue().toString();
-                                newMessagesArrayList.add(imageURL);
+                            imageURL = userSnapshot.child("mImageUrl").getValue().toString().trim();
+                            //Log.d("VIEWMYMESSAGES", "onDataChange: " + imageURL);
+                            newMessagesArrayList.add(imageURL.trim());
+                            newMessagesIDArrayList.add(userSnapshot.getKey());
+                            Log.d("VIEWMYMESSAGES", "im running for no real reason -_-");
+                            //newMessagesIDArrayList.add();
+                            counter++;
+                        }
 
-
+                        //Log.d("VIEWMYMESSAGES", "viewMessages: " + newMessagesArrayList.size());
+                       // Log.d("VIEWMYMESSAGES", "viewMessages: " + newMessagesArrayList.get(0));
+                        if(newMessagesArrayList.size() != 0 && !DELETING_FLAG){
+                            Log.d("VIEWMYMESSAGES", "I AM GONNA SHOW THE IMAGES WOO");
+                            viewMessageDialog.setContentView(R.layout.show_message);
+                            imgShowMessage = viewMessageDialog.findViewById(R.id.imgShowMessage);
+                            Picasso.get().load(newMessagesArrayList.get(0)).into(imgShowMessage);
+                            CURRENT_MESSAGE = 0;
+                            viewMessageDialog.show();
+                        }else{
+                            Log.d("VIEWMYMESSAGES", "I GONNA FINISH NOW :D");
+                            newMessagesArrayList.clear();
+                            newMessagesIDArrayList.clear();
+                            viewMessageDialog.hide();
+                            Toast.makeText(ContactScreen.this, "No Messages To Show", Toast.LENGTH_SHORT).show();
                         }
 
                         return;
@@ -491,7 +538,6 @@ public class ContactScreen extends AppCompatActivity  {
                     public void onCancelled(@NonNull DatabaseError databaseError) {}
 
                 });
-                // show The Image in a ImageView
 
                 break;
             }else {
@@ -617,6 +663,29 @@ public class ContactScreen extends AppCompatActivity  {
             }
 
         });
+
+    }
+
+    public void testOnClick(View v){
+
+        int sizeOfArray = newMessagesArrayList.size();
+        CURRENT_MESSAGE++;
+        Log.d("VIEWMYMESSAGES", "currentmessage: " + CURRENT_MESSAGE);
+        Log.d("VIEWMYMESSAGES", "arraysize: " + sizeOfArray);
+        if(CURRENT_MESSAGE >= sizeOfArray){
+            DELETING_FLAG = true;
+            Log.d("VIEWMYMESSAGES", "testOnClick: Ending");
+            CURRENT_MESSAGE = 0;
+            viewMessageDialog.hide();
+            for(int i = 0; i < sizeOfArray; i ++){
+                deleteMessages(newMessagesIDArrayList.get(i));
+            }
+        }else{
+            viewMessageDialog.setContentView(R.layout.show_message);
+            imgShowMessage = viewMessageDialog.findViewById(R.id.imgShowMessage);
+            Picasso.get().load(newMessagesArrayList.get(CURRENT_MESSAGE)).into(imgShowMessage);
+
+        }
 
     }
 
