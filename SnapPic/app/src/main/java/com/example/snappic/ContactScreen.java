@@ -60,6 +60,7 @@ public class ContactScreen extends AppCompatActivity  {
     TextView txtNewContacts;
     ProgressBar progressBarContact;
     DatabaseReference dbRef;
+    DatabaseReference dbRefDeleteContactReq;
     DatabaseReference dbRefAdd;
     DatabaseReference dbRefADelete;
     DatabaseReference dbRefViewMessage;
@@ -207,10 +208,8 @@ public class ContactScreen extends AppCompatActivity  {
                         String uid;
                         switch(direction){
                             case 4:
-                                //delete item
+                                //delete item from the requested contact list
                                 position = viewHolder.getAdapterPosition();
-                                //deleteRecyclerViewItem(0);
-                                //New_contact_item currentUser = new New_contact_item();
                                 currentUser = New_contact_items.get(position);
                                 uid = currentUser.getUID();
                                 ARRAY_SIZE--;
@@ -220,6 +219,7 @@ public class ContactScreen extends AppCompatActivity  {
                                 deleteContactRequest(uid);
                                 break;
                             case 8:
+
                                 USERS_TO_ADD = 1;
                                 //accept contact request
                                 //GET POS and put uid into a variable
@@ -247,8 +247,6 @@ public class ContactScreen extends AppCompatActivity  {
                         }
 
                         //left is 4
-
-
                         //right is 8
                     }
                 }).attachToRecyclerView(newContRecycler);
@@ -328,8 +326,8 @@ public class ContactScreen extends AppCompatActivity  {
         }
     }
     public void deleteContactRequest(String currentUID){
-        dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("ReceivedContactRequests").child(currentUID);
-        dbRef.addValueEventListener(new ValueEventListener() {
+        dbRefDeleteContactReq = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("ReceivedContactRequests").child(currentUID);
+        dbRefDeleteContactReq.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //delete contact and children with the uid specified
@@ -406,6 +404,7 @@ public class ContactScreen extends AppCompatActivity  {
         changeNumberOfContactRequestsUI();
         SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
         NO_CONTACTS = contactSharedPref.getInt("noContacts",0);
+
 
     }
 

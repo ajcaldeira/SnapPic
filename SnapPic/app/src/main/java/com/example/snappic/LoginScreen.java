@@ -73,7 +73,8 @@ public class LoginScreen extends AppCompatActivity {
                 txtPhoneNumber.setText(rawNumber);
                 progressBar.setVisibility(View.VISIBLE);
                 phoneNumber = txtPhoneNumber.getText().toString();
-
+                btnWrongNumber.setVisibility(View.VISIBLE);
+                txtWrongNumber.setVisibility(View.VISIBLE);
                 PhoneAuthProvider.getInstance().verifyPhoneNumber(
                         phoneNumber,        // Phone number to verify
                         10,                 // Timeout duration
@@ -83,6 +84,7 @@ public class LoginScreen extends AppCompatActivity {
                             @Override
                             public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
                                 signInWithPhoneAuthCredential(phoneAuthCredential);
+
                             }
 
                             @Override
@@ -102,6 +104,8 @@ public class LoginScreen extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 txtError.setVisibility(View.INVISIBLE);
+                btnGetNumber.setVisibility(View.INVISIBLE);
+                btnWrongNumber.setVisibility(View.VISIBLE);
                 progressBar.setVisibility(View.VISIBLE);
                 phoneNumber = txtPhoneNumber.getText().toString();
                 PhoneAuthProvider.getInstance().verifyPhoneNumber(
@@ -253,7 +257,7 @@ public class LoginScreen extends AppCompatActivity {
             //IF THEY ARE GRANTED THEN:
         }else{
             //IF NOT GRANTED, ASK FOR THEM:
-            ActivityCompat.requestPermissions(LoginScreen.this,permissions,ALL_PERMISSION_CODE);
+           // ActivityCompat.requestPermissions(LoginScreen.this,permissions,ALL_PERMISSION_CODE);
         }
 
     }

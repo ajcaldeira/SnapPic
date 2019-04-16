@@ -819,6 +819,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public boolean onTouchEvent(MotionEvent event){
 
         switch(event.getAction())
@@ -836,6 +837,8 @@ public class MainActivity extends AppCompatActivity {
                 {
                     if(deltaX > 0){
                         // LEFT TO RIGHT
+                        mCameraDevice.close();
+                        mCameraDevice = null;
                         Intent intent = new Intent(this, ContactScreen.class);
                         startActivity(intent);
                         overridePendingTransition(R.anim.slide_in_left,R.anim.slide_out_right);
