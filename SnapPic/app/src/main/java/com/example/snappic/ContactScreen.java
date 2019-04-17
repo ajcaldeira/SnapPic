@@ -137,7 +137,6 @@ public class ContactScreen extends AppCompatActivity  {
                         {
                             if(deltaX > 0){
                                 // LEFT TO RIGHT
-
                             }else{
                                 //swiped RIGHT to LEFT
                                 Intent intent = new Intent(ContactScreen.this, MainActivity.class);

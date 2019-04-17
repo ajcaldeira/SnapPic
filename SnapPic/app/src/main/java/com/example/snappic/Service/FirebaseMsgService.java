@@ -32,6 +32,7 @@ import java.util.Random;
 public class FirebaseMsgService extends FirebaseMessagingService {
     FirebaseAuth mAuth;
     DatabaseReference dbRefADelete;
+    DatabaseReference addNewToken;
     public FirebaseMsgService(){
 
     }
@@ -76,7 +77,7 @@ public class FirebaseMsgService extends FirebaseMessagingService {
     @Override
     public void onNewToken(String s) {
         super.onNewToken(s);
-        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+
         Log.d("TOKENFIREBASE",s);
         uploadTokenToDb(s);
     }
@@ -84,12 +85,12 @@ public class FirebaseMsgService extends FirebaseMessagingService {
     public void uploadTokenToDb(final String token){
 
         mAuth = FirebaseAuth.getInstance();
-        dbRefADelete = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid());
-        dbRefADelete.addValueEventListener(new ValueEventListener() {
+        addNewToken = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid());
+        addNewToken.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //delete contact and children with the uid specified
-                dbRefADelete.child("Token").setValue(token);
+                addNewToken.child("Token").setValue(token);
                 return;
             }
             @Override

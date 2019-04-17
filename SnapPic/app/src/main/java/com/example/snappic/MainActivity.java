@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     private String CAMERA_FRONT;
     private String CAMERA_FACE;
     private boolean CAMERA_SWAP;
+    private boolean IS_CAM_DC;
     private int DEVICE_ROTATION;
     private String mFileName;
     private static final int STATE_PREVIEW = 0;
@@ -168,8 +169,17 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onDisconnected(CameraDevice camera) {
-            camera.close();
-            mCameraDevice = null;
+            StopBackgroundThread();
+            if(!IS_CAM_DC){
+                camera.close();
+                mCameraDevice = null;
+            }else{
+                IS_CAM_DC = false;
+                Intent intent = new Intent(MainActivity.this, ContactScreen.class);
+                startActivity(intent);
+                overridePendingTransition(R.anim.slide_in_left,R.anim.slide_out_right);
+            }
+
         }
 
         @Override
@@ -661,11 +671,13 @@ public class MainActivity extends AppCompatActivity {
         super.onConfigurationChanged(newConfig);
         // Checks the orientation of the screen
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            //LANDSCAPE
             Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
             fixOrientation(mPreviewSize.getWidth(),mPreviewSize.getHeight());
 
 
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+            //PORTRAIT
             Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
             Intent restart = new Intent(MainActivity.this, MainActivity.class);
             startActivity(restart);
@@ -839,9 +851,11 @@ public class MainActivity extends AppCompatActivity {
                         // LEFT TO RIGHT
                         mCameraDevice.close();
                         mCameraDevice = null;
-                        Intent intent = new Intent(this, ContactScreen.class);
-                        startActivity(intent);
-                        overridePendingTransition(R.anim.slide_in_left,R.anim.slide_out_right);
+                        closeCamera();
+                        IS_CAM_DC = true;
+                        mCameraDeviceStateCallback.onDisconnected(mCameraDevice);
+
+
                     }else{
                         //swiped RIGHT to LEFT
                         Intent intent = new Intent(this, RightScreen.class);

@@ -41,7 +41,7 @@ public class SendNotificationJava extends AsyncTask<String,String,String> {
 
             JSONObject info = new JSONObject();
             info.put("title", "SnapPic");   // Notification title
-            info.put("body", "New Contact Request! Exciting!"); // Notification body
+            info.put("body", "New Snap Received!"); // Notification body
             info.put("click_action", "MAINACTIVITYY"); // Notification body
             json.put("notification", info);
 
@@ -49,7 +49,7 @@ public class SendNotificationJava extends AsyncTask<String,String,String> {
             wr.write(json.toString());
             wr.flush();
             conn.getInputStream();
-            Log.d("sendnotificationerror","I didnt fail..." + TOKEN_TO_SEND);
+            Log.d("sendnotificationerror","I didn't fail..." + TOKEN_TO_SEND);
         }
         catch (Exception e)
         {
