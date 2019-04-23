@@ -46,6 +46,7 @@ public class ContactScreen extends AppCompatActivity  {
     private static final String SHARED_PREFS_MESSAGES = "messagesSP";
     private int ARRAY_SIZE;
     private boolean DELETING_FLAG;
+    private boolean DELETING_JUST_ADDED = false; //stop the db from auto deleting something if it was previously deleted
     private int NO_CONTACTS;
     private int CURRENT_MESSAGE;
     private String CURRENT_MESSAGE_USERID;
@@ -216,6 +217,8 @@ public class ContactScreen extends AppCompatActivity  {
                                 New_contact_items.clear();
                                 setUpRecyclerView();
                                 deleteContactRequest(uid);
+                               // finish();
+                               // startActivity(getIntent());
                                 break;
                             case 8:
 
@@ -256,6 +259,14 @@ public class ContactScreen extends AppCompatActivity  {
         startService(serviceIntent);
 
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Intent serviceIntent = new Intent(ContactScreen.this, ContactFetchIntentService.class);
+        startService(serviceIntent);
+    }
+
     public void getContactRequest(){
         New_contact_items.clear();
         dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("ReceivedContactRequests");
@@ -264,11 +275,18 @@ public class ContactScreen extends AppCompatActivity  {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if(true){
                     for(DataSnapshot ds: dataSnapshot.getChildren()){
-
+                        String currentName;
+                        String currentNumber;
                         //get the contacts name and number
+                        if(ds.child("Number").getValue() == null || ds.child("Name").getValue() == null){
 
-                        String currentName = ds.child("Name").getValue().toString();
-                        String currentNumber = ds.child("Number").getValue().toString();
+                            break;
+
+                        }else{
+                            currentName = ds.child("Name").getValue().toString();
+                            currentNumber = ds.child("Number").getValue().toString();
+                        }
+
 
                         String uid = ds.getKey();
                         if(New_contact_items.size() == ARRAY_SIZE){
@@ -301,22 +319,21 @@ public class ContactScreen extends AppCompatActivity  {
             String uid = contactSharedPref.getString(spName,"");
             String userNumber = contactSharedPrefsSpecific.getString(uid,"");
             if(userNumber.equals(UID_TO_DELETE)){
-                //if the number the user tapped on is equal to the current shared pref then end the loop
-                dbRefADelete = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Contacts").child(uid);
-                dbRefADelete.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        //delete contact and children with the uid specified
-                        dataSnapshot.getRef().removeValue();
-
-                        return;
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {}
-
-                });
 
 
+                    //if the number the user tapped on is equal to the current shared pref then end the loop
+                    dbRefADelete = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Contacts").child(uid);
+                    dbRefADelete.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            //delete contact and children with the uid specified
+                            dataSnapshot.getRef().removeValue();
+                            return;
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {}
+
+                    });
 
                 break;
             }else {
@@ -330,14 +347,17 @@ public class ContactScreen extends AppCompatActivity  {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //delete contact and children with the uid specified
-                dataSnapshot.getRef().removeValue();
-
+                if(!DELETING_JUST_ADDED) {//avoid deleting something if it was deleted and added again - firebase problem
+                    dataSnapshot.getRef().removeValue();
+                }
                 return;
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
 
         });
+        DELETING_JUST_ADDED = false;
+        dbRefDeleteContactReq = null;
     }
     public void deleteMessages(final String currentMessageID){
         dbRefDeleteMessage = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Received");
@@ -350,14 +370,14 @@ public class ContactScreen extends AppCompatActivity  {
 
                 return;
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
 
         });
+
     }
     public void addUserToContacts(final String currentUID, final String currentName, final String currentNumber){
-
-
         dbRefAdd = FirebaseDatabase.getInstance().getReference("Users");
         dbRefAdd.addValueEventListener(new ValueEventListener() {
             @Override
@@ -387,11 +407,13 @@ public class ContactScreen extends AppCompatActivity  {
     }
 
     public void setUpRecyclerView(){
-        newContRecyclerLayoutManager = new LinearLayoutManager(ContactScreen.this);
-        newContRecyclerAdapter = new New_contact_recycler_adapter(New_contact_items);
-        newContRecycler.setLayoutManager(newContRecyclerLayoutManager);
-        newContRecycler.setAdapter(newContRecyclerAdapter);
-        btnContactAlert = findViewById(R.id.btnContactAlert);
+        if(newContRecycler != null){
+            newContRecyclerLayoutManager = new LinearLayoutManager(ContactScreen.this);
+            newContRecyclerAdapter = new New_contact_recycler_adapter(New_contact_items);
+            newContRecycler.setLayoutManager(newContRecyclerLayoutManager);
+            newContRecycler.setAdapter(newContRecyclerAdapter);
+            btnContactAlert = findViewById(R.id.btnContactAlert);
+        }
     }
 
     @Override
@@ -417,6 +439,7 @@ public class ContactScreen extends AppCompatActivity  {
 
     public void AddNewContact(View v){
         //GET THE USER'S CONTACTS
+        DELETING_JUST_ADDED = true;
         dbRef = FirebaseDatabase.getInstance().getReference("Users");
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -441,20 +464,27 @@ public class ContactScreen extends AppCompatActivity  {
 
                             //send notification to ds.child(uid).child(number)
                             Toast.makeText(ContactScreen.this, "Contact Request Sent", Toast.LENGTH_SHORT).show();
-
                         }
                         searchedNumber = "";
                         txtSearchNumber.setText("");
+                        dbRef = null;
                         break;
                     }
 
                 }
 
+                Intent serviceIntent = new Intent(ContactScreen.this, ContactFetchIntentService.class);
+                GetUserContacts(mAuth.getUid(),false);
+                startService(serviceIntent);
+                changeNumberOfContactRequestsUI();
 
+                getContactRequest();
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
+        Intent serviceIntent = new Intent(ContactScreen.this, ContactFetchIntentService.class);
+        startService(serviceIntent);
     }
     public void sendContactRequest(){
         dbRef = FirebaseDatabase.getInstance().getReference("Users");
@@ -513,8 +543,7 @@ public class ContactScreen extends AppCompatActivity  {
                             counter++;
                         }
 
-                        //Log.d("VIEWMYMESSAGES", "viewMessages: " + newMessagesArrayList.size());
-                       // Log.d("VIEWMYMESSAGES", "viewMessages: " + newMessagesArrayList.get(0));
+
                         if(newMessagesArrayList.size() != 0 && !DELETING_FLAG){
                             Log.d("VIEWMYMESSAGES", "I AM GONNA SHOW THE IMAGES WOO");
                             viewMessageDialog.setContentView(R.layout.show_message);
@@ -529,7 +558,7 @@ public class ContactScreen extends AppCompatActivity  {
                             viewMessageDialog.hide();
                             Toast.makeText(ContactScreen.this, "No Messages To Show", Toast.LENGTH_SHORT).show();
                         }
-
+                        GetUserContacts(mAuth.getUid(),false);
                         return;
                     }
                     @Override
@@ -583,6 +612,7 @@ public class ContactScreen extends AppCompatActivity  {
         moveTaskToBack(true);
         Intent mainActivity = new Intent(ContactScreen.this,MainActivity.class);
         startActivity(mainActivity);
+        overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left);
     }
     public void SaveSharedPrefs(String spName, String uid,String spUsersName,String contactSPRef,String spUsersNumber){
         SharedPreferences contactSharedPref = getSharedPreferences(contactSPRef,MODE_PRIVATE);

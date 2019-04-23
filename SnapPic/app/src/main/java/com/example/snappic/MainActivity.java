@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -44,11 +45,15 @@ import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
+import android.view.animation.AnimationSet;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.FrameLayout;
@@ -141,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
             ConnectToCamera();
             startPreview();
+            Log.d("onDisconnectedCAM", "onSurfaceTextureAvailable: hit");
         }
 
         @Override
@@ -169,15 +175,19 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onDisconnected(CameraDevice camera) {
-            StopBackgroundThread();
+            Log.d("onDisconnectedCAM", "onDisconnected: ");
+            //StopBackgroundThread();
             if(!IS_CAM_DC){
                 camera.close();
                 mCameraDevice = null;
             }else{
                 IS_CAM_DC = false;
+                textureView = null;
+
                 Intent intent = new Intent(MainActivity.this, ContactScreen.class);
                 startActivity(intent);
                 overridePendingTransition(R.anim.slide_in_left,R.anim.slide_out_right);
+
             }
 
         }
@@ -191,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void closeCamera() {
+
         if (mCameraDevice != null) {
             mCameraDevice.close();
             mCameraDevice = null;
@@ -241,7 +252,6 @@ public class MainActivity extends AppCompatActivity {
                 //gets a list of available resolutions
                 StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 
-
                 //Orientation. portrait or not?
                 int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
                 int totalRotation = senseorToDeviceRotation(cameraCharacteristics, deviceOrientation);
@@ -262,9 +272,6 @@ public class MainActivity extends AppCompatActivity {
                 //so we may not get the exact resolution, but we get the closest match
                 mPreviewSize = pickBestSize(map.getOutputSizes(SurfaceTexture.class), rotatedWidth, rotaredHeight);
                 //HANDLE 2K AND 4K
-
-
-
                 mImageSize = pickBestSize(map.getOutputSizes(ImageFormat.JPEG), rotatedWidth, rotaredHeight);
                 mImageReader = ImageReader.newInstance(mImageSize.getWidth(),mImageSize.getHeight(), ImageFormat.JPEG,1);
                 mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler);
@@ -284,6 +291,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //FIXING ORIENTATION
+    //3 is rotating right
+    //1 is left
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void fixOrientation(int width, int height){
         if(mPreviewSize == null || textureView == null){
@@ -665,29 +674,101 @@ public class MainActivity extends AppCompatActivity {
         startService(serviceIntent);
 
     }
+
+
+
+    /*
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         // Checks the orientation of the screen
+        Toast.makeText(this, "something happened", Toast.LENGTH_SHORT).show();
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             //LANDSCAPE
             Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
-            fixOrientation(mPreviewSize.getWidth(),mPreviewSize.getHeight());
+           // fixOrientation(mPreviewSize.getWidth(),mPreviewSize.getHeight());
 
 
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
             //PORTRAIT
             Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
-            Intent restart = new Intent(MainActivity.this, MainActivity.class);
-            startActivity(restart);
+           // Intent restart = new Intent(MainActivity.this, MainActivity.class);
+            //startActivity(restart);
         }
-    }
+    }*/
+    ImageView squirrelImg;
     private Button btnSwapCam;
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        OrientationEventListener mOrientationListener = new OrientationEventListener(
+                getApplicationContext()) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+
+                Log.d("WHATSMYORIENTATION", "onOrientationChanged: " + orientation);
+                if ((orientation > 235 && orientation < 340)) {
+
+                    squirrelImg = findViewById(R.id.imageView3);
+                    AnimationSet animSet = new AnimationSet(true);
+                    animSet = new AnimationSet(true);
+                    animSet.setInterpolator(new DecelerateInterpolator());
+                    animSet.setFillAfter(true);
+                    animSet.setFillEnabled(true);
+                    final RotateAnimation animRotate90 = new RotateAnimation(0.0f, -270.0f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+                    animRotate90.setDuration(0);
+                    animRotate90.setFillAfter(true);
+                    animSet.addAnimation(animRotate90);
+                    squirrelImg.startAnimation(animSet);
+                    btnSwapCam.startAnimation(animSet);
+                } else if ((orientation > 55 && orientation < 135)) {
+                    //Log.d("WHATSMYORIENTATION", "onOrientationChanged: 2ndif ");
+                    squirrelImg = findViewById(R.id.imageView3);
+                    AnimationSet animSet2 = new AnimationSet(true);
+                    animSet2 = new AnimationSet(true);
+                    animSet2.setInterpolator(new DecelerateInterpolator());
+                    animSet2.setFillAfter(true);
+                    animSet2.setFillEnabled(true);
+                    final RotateAnimation animRotate270 = new RotateAnimation(-90.0f, -90.0f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+                    animRotate270.setDuration(0);
+                    animRotate270.setFillAfter(true);
+                    animSet2.addAnimation(animRotate270);
+                    squirrelImg.startAnimation(animSet2);
+                    btnSwapCam.startAnimation(animSet2);
+                }else if ((orientation >0 && orientation < 310)) {
+                    //Log.d("WHATSMYORIENTATION", "onOrientationChanged: 2ndif ");
+                    squirrelImg = findViewById(R.id.imageView3);
+                    AnimationSet animSet2 = new AnimationSet(true);
+                    animSet2 = new AnimationSet(true);
+                    animSet2.setInterpolator(new DecelerateInterpolator());
+                    animSet2.setFillAfter(true);
+                    animSet2.setFillEnabled(true);
+                    final RotateAnimation animRotate270 = new RotateAnimation(00.0f, 0.0f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+                    animRotate270.setDuration(0);
+                    animRotate270.setFillAfter(true);
+                    animSet2.addAnimation(animRotate270);
+                    squirrelImg.startAnimation(animSet2);
+                    btnSwapCam.startAnimation(animSet2);
+                }
+            }
+        };
+
+        if (mOrientationListener.canDetectOrientation()) {
+            mOrientationListener.enable();
+        }
+
+
+
+        setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
@@ -808,12 +889,6 @@ public class MainActivity extends AppCompatActivity {
         }else {
             handlePermissions();
         }
-
-
-
-
-
-
     }
 
 
@@ -849,11 +924,13 @@ public class MainActivity extends AppCompatActivity {
                 {
                     if(deltaX > 0){
                         // LEFT TO RIGHT
-                        mCameraDevice.close();
-                        mCameraDevice = null;
+
                         closeCamera();
                         IS_CAM_DC = true;
+                        mSurfaceTexListener = null;
+                        textureView.setSurfaceTextureListener(mSurfaceTexListener);
                         mCameraDeviceStateCallback.onDisconnected(mCameraDevice);
+
 
 
                     }else{

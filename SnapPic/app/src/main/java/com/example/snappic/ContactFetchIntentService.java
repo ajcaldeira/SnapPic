@@ -122,12 +122,14 @@ public class ContactFetchIntentService extends IntentService {
 
     }
 
+    //update the number of contact requests the user has (top left)
     public void updateNumContactReq(int noContacts){
         SharedPreferences contactSharedPrefReq = getSharedPreferences(SHARED_PREFS_REQ_CONTACTS,MODE_PRIVATE);
         SharedPreferences.Editor editor = contactSharedPrefReq.edit();
         editor.putInt("numOfContactsRequests", noContacts);
         editor.apply();
     }
+
 
     public void CheckIfUserHasContactRequest(){
         dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid());

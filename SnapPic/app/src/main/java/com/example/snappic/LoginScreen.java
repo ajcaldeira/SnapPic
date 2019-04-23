@@ -257,7 +257,7 @@ public class LoginScreen extends AppCompatActivity {
             //IF THEY ARE GRANTED THEN:
         }else{
             //IF NOT GRANTED, ASK FOR THEM:
-           // ActivityCompat.requestPermissions(LoginScreen.this,permissions,ALL_PERMISSION_CODE);
+            ActivityCompat.requestPermissions(LoginScreen.this,permissions,ALL_PERMISSION_CODE);
         }
 
     }
