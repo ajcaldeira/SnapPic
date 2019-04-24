@@ -9,6 +9,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
@@ -34,9 +35,8 @@ import java.util.Date;
 
 
 public class RightScreen extends AppCompatActivity {
-
-
     private float x1,x2,y1,y2;
+    private int ORIENTATION_FLIP = 0;
     static final int MIN_DISTANCE = 150;
     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
     DateFormat dateFormatTime = new SimpleDateFormat("yyyy-MM-dd @ HH:mm");
@@ -60,12 +60,7 @@ public class RightScreen extends AppCompatActivity {
         imgExitStory = findViewById(R.id.imgExitStory);
         frameLayoutFragment = findViewById(R.id.fragCtr);
         frameLayoutFragment.setVisibility(View.INVISIBLE);
-
-
         getUIDContactList();
-
-
-
         imgExitStory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -114,8 +109,17 @@ public class RightScreen extends AppCompatActivity {
                 //SHOW FRAGMENT HERE
                 frameLayoutFragment.setVisibility(View.VISIBLE);
                 Story fragImg = arrayList.get(position);
-                Picasso.get().load(fragImg.getUrl()).into(fragImgView);
-                //fragment.getView().setBackground(fragImg.getUrl();
+                //get the first letter of the name which will be 0, 9 or 2
+                String x = fragImg.getImgName().substring(0,1);
+                if(x.equals("2")){//270 degrees
+                    ORIENTATION_FLIP = 270;
+                }else if(x.equals("9")){
+                    ORIENTATION_FLIP = 90;
+                }else{
+                    ORIENTATION_FLIP = 0;
+                }
+                Picasso.get().load(fragImg.getUrl()).rotate(-ORIENTATION_FLIP).into(fragImgView);
+                Log.d("picassoimage", fragImg.getImgName() + " = "+ORIENTATION_FLIP);
 
             }
         });
@@ -165,12 +169,13 @@ public class RightScreen extends AppCompatActivity {
                     String storyTimeStamp = retrieveStory.timestamp;
                     String storyName = spUsersName;
                     String imgUrl = retrieveStory.mImageUrl;
+                    String imgName = retrieveStory.mName;
 
                     long epoch = Long.parseLong(storyTimeStamp);
                     Date dateEp = new Date(epoch);
 
                     //create story object and pass the data into it
-                    Story story = new Story(dateFormatTime.format(dateEp),storyName,imgUrl);
+                    Story story = new Story(dateFormatTime.format(dateEp),storyName,imgUrl,imgName);
                     arrayList.add(story);
                 }
                 StoryListAdapter adapter = new StoryListAdapter(RightScreen.this, R.layout.custom_story_list, arrayList);

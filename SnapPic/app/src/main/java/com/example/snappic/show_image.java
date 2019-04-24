@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.annotation.NonNull;
@@ -49,6 +50,7 @@ import java.util.Date;
 
 public class show_image extends AppCompatActivity {
     private String TOKEN_TO_SEND_TO = "";
+    private int FLIP_ORIENTATION;//use this to flip it back before previewing
     private boolean TOKEN_IS_SENT = false;
     private Uri mImageUri;
     private StorageReference mStorageRef;
@@ -121,14 +123,7 @@ public class show_image extends AppCompatActivity {
         if (mOrientationListener.canDetectOrientation()) {
             mOrientationListener.enable();
         }
-
-
-
         //ORIENTATION FOR BUTTONS END
-
-
-
-
 
         setContentView(R.layout.activity_show_image);
 
@@ -156,6 +151,7 @@ public class show_image extends AppCompatActivity {
         Intent intent = getIntent();
         String fileName = intent.getExtras().getString("filename");
         String toSendUID = intent.getExtras().getString("toSendUID");
+        int flipOrientation = intent.getExtras().getInt("flipOrientation");
         mFileName = fileName;
         mtoSendUID = toSendUID;
         //make sure still not null
@@ -170,9 +166,28 @@ public class show_image extends AppCompatActivity {
             if(myImg.exists()){
                 //convert file to bitmap:
                 Bitmap decodeImg = BitmapFactory.decodeFile(myImg.getAbsolutePath());
+
+                //flip it for the preview
+                switch (flipOrientation){
+                    case 0:
+
+                        break;
+                    case 90:
+                        Matrix matrix = new Matrix();
+                        matrix.postRotate(360-90);
+                        decodeImg = Bitmap.createBitmap(decodeImg,0,0,decodeImg.getWidth(),decodeImg.getHeight(),matrix,true);
+                        break;
+                    case 270:
+                        Matrix matrix270 = new Matrix();
+                        matrix270.postRotate(360-270);
+                        decodeImg = Bitmap.createBitmap(decodeImg,0,0,decodeImg.getWidth(),decodeImg.getHeight(),matrix270,true);
+                        break;
+                }
+
+
+
                 //show it on image view
                 img.setImageBitmap(decodeImg);
-
                 mImageUri = Uri.fromFile(myImg.getAbsoluteFile());
             }
         }

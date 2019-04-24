@@ -378,6 +378,7 @@ public class ContactScreen extends AppCompatActivity  {
 
     }
     public void addUserToContacts(final String currentUID, final String currentName, final String currentNumber){
+        DELETING_JUST_ADDED = true;
         dbRefAdd = FirebaseDatabase.getInstance().getReference("Users");
         dbRefAdd.addValueEventListener(new ValueEventListener() {
             @Override
@@ -636,10 +637,12 @@ public class ContactScreen extends AppCompatActivity  {
     public void loadSharedPrefNoContacts(){
         SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
         NO_CONTACTS = contactSharedPref.getInt("noContacts",0);
+        DELETING_JUST_ADDED = true;
     }
 //TRYING TO GET THE USERS CONTATCS, FIRST GET THE USER WE WANNA GET THE CONTACTS OF THEN TRY ITTERATE THROUGH THE CONTACTS
     public void GetUserContacts(String uid,final boolean isClassCall){
         //GET THE USER'S CONTACTS
+        DELETING_JUST_ADDED = true;
 
         arrayList.clear();
         //dbCheckForMessages = FirebaseDatabase.getInstance().getReference("Users");

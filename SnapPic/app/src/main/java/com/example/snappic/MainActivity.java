@@ -96,6 +96,7 @@ import static android.hardware.camera2.CameraMetadata.FLASH_MODE_TORCH;
 public class MainActivity extends AppCompatActivity {
     //CAMERA
     private int ALL_PERMISSION_CODE = 1;
+    private int FLIP_ORIENTATION;
     private String CAMERA_BACK;
     private String CAMERA_FRONT;
     private String CAMERA_FACE;
@@ -210,8 +211,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     protected void onPause() {
-        closeCamera();
-        StopBackgroundThread();
+        //closeCamera();
+        //StopBackgroundThread();
         super.onPause();
     }
 
@@ -499,19 +500,14 @@ public class MainActivity extends AppCompatActivity {
             mCapReqBuilder.addTarget(mImageReader.getSurface());
             mCapReqBuilder.set(CaptureRequest.JPEG_ORIENTATION,mTotalRotation);
 
-
-            //mCapReqBuilder.set(CaptureRequest.CONTROL_AE_MODE,CaptureRequest.CONTROL_AE_MODE_ON);
-            //mCapReqBuilder.set(CaptureRequest.FLASH_MODE,CaptureRequest.FLASH_MODE_TORCH);
-
-
             //we need a custom capture callback
             CameraCaptureSession.CaptureCallback stillCaptureCallback = new CameraCaptureSession.CaptureCallback() {
                 @Override
                 public void onCaptureStarted(CameraCaptureSession session, CaptureRequest request, long timestamp, long frameNumber) {
                     super.onCaptureStarted(session, request, timestamp, frameNumber);
-                    //TurnOnFlash();
+                    String rotOrientation = String.valueOf(FLIP_ORIENTATION);
                     String timeStamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new java.util.Date());
-                    mFileName = "SnapPic_" + timeStamp + ".jpg";
+                    mFileName = rotOrientation + "_SnapPic_" + timeStamp + ".jpg";
 
                 }
             };
@@ -538,6 +534,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+
     private class ImageSave implements Runnable{
 
         private final Image mImage;
@@ -556,18 +553,36 @@ public class MainActivity extends AppCompatActivity {
             decodeImg = BitmapFactory.decodeByteArray(data, 0, data.length);
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 
+            //flip the image depending on the orientation it was saved
+            int flipOrientation = FLIP_ORIENTATION;
+            switch (flipOrientation){
+                case 90:
+                    Matrix matrix = new Matrix();
+                    matrix.postRotate(-90);
+                    decodeImg = Bitmap.createBitmap(decodeImg,0,0,decodeImg.getWidth(),decodeImg.getHeight(),matrix,true);
+
+                    break;
+                case 270:
+                    Matrix matrix270 = new Matrix();
+                    matrix270.postRotate(-270);
+                    decodeImg = Bitmap.createBitmap(decodeImg,0,0,decodeImg.getWidth(),decodeImg.getHeight(),matrix270,true);
+
+                    break;
+            }
+
+            //flip mirror image from front cam
             if(CAMERA_FACE.equals(CAMERA_FRONT)){
                 Float cx = decodeImg.getWidth()/2f;
                 Float cy = decodeImg.getHeight()/2f;
 
-                Matrix matrix = new Matrix();
-                matrix.postScale(-1, 1, cx, cy);
+                Matrix matrixMirror = new Matrix();
+                matrixMirror.postScale(-1, 1, cx, cy);
 
                 Bitmap flippedImg;
-                flippedImg = Bitmap.createBitmap(decodeImg,0,0,decodeImg.getWidth(),decodeImg.getHeight(),matrix,true);
+                flippedImg = Bitmap.createBitmap(decodeImg,0,0,decodeImg.getWidth(),decodeImg.getHeight(),matrixMirror,true);
                 flippedImg.compress(Bitmap.CompressFormat.JPEG, 15, bytes);
             }else{
-                decodeImg.compress(Bitmap.CompressFormat.JPEG, 15, bytes);
+                //decodeImg.compress(Bitmap.CompressFormat.JPEG, 15, bytes);
             }
 
             File ExternalStorageDirectory = Environment.getExternalStorageDirectory();
@@ -592,6 +607,7 @@ public class MainActivity extends AppCompatActivity {
             Intent intent  = new Intent(MainActivity.this, show_image.class);
             intent.putExtra("filename", mFileName);
             intent.putExtra("toSendUID",  toSendUidPassed);
+            intent.putExtra("flipOrientation",  flipOrientation);
             startActivity(intent);
 
         }
@@ -748,6 +764,7 @@ public class MainActivity extends AppCompatActivity {
                 squirrelImg = findViewById(R.id.imageView3);
                 Log.d("WHATSMYORIENTATION", "onOrientationChanged: " + orientation);
                 if ((orientation > 235 && orientation < 290)) {
+                    FLIP_ORIENTATION = 270;
                     AnimationSet animSet ;
                     animSet = new AnimationSet(true);
                     animSet.setInterpolator(new DecelerateInterpolator());
@@ -789,6 +806,7 @@ public class MainActivity extends AppCompatActivity {
                         btnIsSend.startAnimation(animSetIsToSend);
                     }
                 } else if ((orientation > 65 && orientation < 135)) {
+                    FLIP_ORIENTATION = 90;
                     AnimationSet animSet2;
                     animSet2 = new AnimationSet(true);
                     animSet2.setInterpolator(new DecelerateInterpolator());
@@ -819,6 +837,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }else if ((orientation > 0 && orientation < 310 && orientation != 65 && orientation != 290 && orientation != 271)) {
                     //normal portrait
+                    FLIP_ORIENTATION = 0;
                     AnimationSet animSet2;
                     animSet2 = new AnimationSet(true);
                     animSet2.setInterpolator(new DecelerateInterpolator());

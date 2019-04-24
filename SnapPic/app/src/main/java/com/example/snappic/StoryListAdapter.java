@@ -44,9 +44,10 @@ public class StoryListAdapter extends ArrayAdapter<Story> {
         String date = getItem(position).getDate();
         String name = getItem(position).getName();
         String imgUrl = getItem(position).getUrl();
+        String imgName = getItem(position).getImgName();
 
         //create contact object with the info
-        Story story = new Story(date,name,imgUrl);
+        Story story = new Story(date,name,imgUrl,imgName);
 
         LayoutInflater inflater = LayoutInflater.from(mContext);
         convertView = inflater.inflate(mResource, parent, false);
