@@ -67,7 +67,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
@@ -110,9 +114,8 @@ public class MainActivity extends AppCompatActivity {
     private int testWidth;
     private int testHeight;
 
-
+    DatabaseReference dbTokenWriter;
     FrameLayout frameLayout;
-    ShowCamera showcam;
     ToggleButton btnFlash;
     TextureView textureView;
     Button btnIsSend;
@@ -124,12 +127,6 @@ public class MainActivity extends AppCompatActivity {
 
     private float x1, x2,y1,y2;
     static final int MIN_DISTANCE = 100;
-
-
-    /*******THREAD FOR CONTACTS*************/
-
-
-    /*******THREAD FOR CONTACTS END*********/
 
     //OVERIDE BACK BUTTON PRESS
     @Override
@@ -506,8 +503,8 @@ public class MainActivity extends AppCompatActivity {
             mCapReqBuilder.set(CaptureRequest.JPEG_ORIENTATION,mTotalRotation);
 
 
-            mCapReqBuilder.set(CaptureRequest.CONTROL_AE_MODE,CaptureRequest.CONTROL_AE_MODE_ON);
-            mCapReqBuilder.set(CaptureRequest.FLASH_MODE,CaptureRequest.FLASH_MODE_TORCH);
+            //mCapReqBuilder.set(CaptureRequest.CONTROL_AE_MODE,CaptureRequest.CONTROL_AE_MODE_ON);
+            //mCapReqBuilder.set(CaptureRequest.FLASH_MODE,CaptureRequest.FLASH_MODE_TORCH);
 
 
             //we need a custom capture callback
@@ -669,9 +666,50 @@ public class MainActivity extends AppCompatActivity {
            BackToLogin();
         }
 
+        //write notification token of the user to db
+        FirebaseInstanceId.getInstance().getInstanceId().addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+            @Override
+            public void onComplete(@NonNull Task<InstanceIdResult> task) {
+
+                String token = task.getResult().getToken();//gets my token
+                //Log.d("TOKENFIREBASE", token);
+                writeTokenToDB(token);
+                dbTokenWriter = null;
+
+
+            }
+        });
+
         StartBackgroundThread();
         Intent serviceIntent = new Intent(MainActivity.this, ContactFetchIntentService.class);
         startService(serviceIntent);
+
+    }
+    private void writeTokenToDB(final String token){
+        dbTokenWriter = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid());
+        dbTokenWriter.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                //check if my token is there
+                //if not then write it
+                if(dataSnapshot.child("token").exists()){
+                    if(!dataSnapshot.child("token").getValue().toString().equals(token)){
+                        //token doesnt match the one in the db
+                        //update it
+                        dataSnapshot.child("token").getRef().setValue(token);
+                    }
+                }else{
+                    //the user does not have a token
+                    dataSnapshot.child("token").getRef().setValue(token);
+                }
+                return;
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+
+        });
+        dbTokenWriter = null;
+
 
     }
 
@@ -698,7 +736,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }*/
     ImageView squirrelImg;
-    private Button btnSwapCam;
+    Button btnSwapCam;
+    Button btnLogout;
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -708,28 +747,37 @@ public class MainActivity extends AppCompatActivity {
                 getApplicationContext()) {
             @Override
             public void onOrientationChanged(int orientation) {
-
+                btnLogout = findViewById(R.id.btnLogOut);
+                squirrelImg = findViewById(R.id.imageView3);
                 Log.d("WHATSMYORIENTATION", "onOrientationChanged: " + orientation);
-                if ((orientation > 235 && orientation < 340)) {
-
-                    squirrelImg = findViewById(R.id.imageView3);
-                    AnimationSet animSet = new AnimationSet(true);
+                if ((orientation > 235 && orientation < 290)) {
+                    AnimationSet animSet ;
                     animSet = new AnimationSet(true);
                     animSet.setInterpolator(new DecelerateInterpolator());
                     animSet.setFillAfter(true);
                     animSet.setFillEnabled(true);
-                    final RotateAnimation animRotate90 = new RotateAnimation(0.0f, -270.0f,
-                            RotateAnimation.RELATIVE_TO_SELF, 0.5f,
-                            RotateAnimation.RELATIVE_TO_SELF, 0.5f);
+                    final RotateAnimation animRotate90 = new RotateAnimation(90.0f, -270.0f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.6f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.6f);
                     animRotate90.setDuration(0);
                     animRotate90.setFillAfter(true);
                     animSet.addAnimation(animRotate90);
                     squirrelImg.startAnimation(animSet);
                     btnSwapCam.startAnimation(animSet);
-                } else if ((orientation > 55 && orientation < 135)) {
-                    //Log.d("WHATSMYORIENTATION", "onOrientationChanged: 2ndif ");
-                    squirrelImg = findViewById(R.id.imageView3);
-                    AnimationSet animSet2 = new AnimationSet(true);
+                    AnimationSet animSetLogout ;
+                    animSetLogout = new AnimationSet(true);
+                    animSetLogout.setInterpolator(new DecelerateInterpolator());
+                    animSetLogout.setFillAfter(true);
+                    animSetLogout.setFillEnabled(true);
+                    final RotateAnimation animRotateLogout = new RotateAnimation(90.0f, -270.0f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.6f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.05f);
+                    animRotateLogout.setDuration(0);
+                    animRotateLogout.setFillAfter(true);
+                    animSetLogout.addAnimation(animRotateLogout);
+                    btnLogout.startAnimation(animSetLogout);
+                } else if ((orientation > 65 && orientation < 135)) {
+                    AnimationSet animSet2;
                     animSet2 = new AnimationSet(true);
                     animSet2.setInterpolator(new DecelerateInterpolator());
                     animSet2.setFillAfter(true);
@@ -742,10 +790,9 @@ public class MainActivity extends AppCompatActivity {
                     animSet2.addAnimation(animRotate270);
                     squirrelImg.startAnimation(animSet2);
                     btnSwapCam.startAnimation(animSet2);
-                }else if ((orientation >0 && orientation < 310)) {
-                    //Log.d("WHATSMYORIENTATION", "onOrientationChanged: 2ndif ");
-                    squirrelImg = findViewById(R.id.imageView3);
-                    AnimationSet animSet2 = new AnimationSet(true);
+                    btnLogout.startAnimation(animSet2);
+                }else if ((orientation > 0 && orientation < 310 && orientation != 65 && orientation != 290 && orientation != 271)) {
+                    AnimationSet animSet2;
                     animSet2 = new AnimationSet(true);
                     animSet2.setInterpolator(new DecelerateInterpolator());
                     animSet2.setFillAfter(true);
@@ -758,6 +805,7 @@ public class MainActivity extends AppCompatActivity {
                     animSet2.addAnimation(animRotate270);
                     squirrelImg.startAnimation(animSet2);
                     btnSwapCam.startAnimation(animSet2);
+                    btnLogout.startAnimation(animSet2);
                 }
             }
         };
@@ -819,40 +867,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        //Flash
-        btnFlash = findViewById(R.id.btnFlashOn);
-        btnFlash.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @RequiresApi(api = Build.VERSION_CODES.M)
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                //if(CAMERA_FACE == CAMERA_BACK){//make sure its the back camera
-
-                    if(isChecked){
-                        //if its activated turn off flash and change image to flash off background
-                        btnFlash.setBackgroundResource(R.drawable.flashico_off);
-
-                        //turn off
-                    }else{
-                        btnFlash.setBackgroundResource(R.drawable.flashico);
-                       // mCapReqBuilder.set(CaptureRequest.FLASH_MODE,CaptureRequest.FLASH_MODE_SINGLE);
-                    }
-                //}
-
-            }
-        });
-
         //prepare the frame layout
 
         textureView = findViewById(R.id.textureView);
 
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
-            //already has permissions
-            //open camera
-            //cam = Camera.open();Old cam
-            // call the class
-            //showcam = new ShowCamera(this,cam);Old cam
-            //frameLayout.addView(showcam);Old cam
+
             /*******************NEW CAMERA *****************/
 
             //have to use this as the framlayout w and h waere being queried before the layout was drawn:
@@ -943,9 +963,7 @@ public class MainActivity extends AppCompatActivity {
                 else if(Math.abs(deltaY) > MIN_DISTANCE)
                 {
                     //swipe down
-                    if(deltaY > 0){
-                        Toast.makeText(this, "if", Toast.LENGTH_SHORT).show();
-                    }
+
                 }
                 break;
         }
@@ -993,20 +1011,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
-
     //then the deivice orientation is turned: https://stackoverflow.com/questions/5726657/how-to-detect-orientation-change-in-layout-in-android
-
-
-
-
-
-
-
-
-
-
-
-
 
 }

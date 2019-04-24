@@ -10,7 +10,11 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.OrientationEventListener;
 import android.view.View;
+import android.view.animation.AnimationSet;
+import android.view.animation.DecelerateInterpolator;
+import android.view.animation.RotateAnimation;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -21,8 +25,11 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 import com.google.firebase.storage.FirebaseStorage;
@@ -48,7 +55,7 @@ public class show_image extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private StorageTask mUploadTask;
     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
+    DatabaseReference dbTokenGetter;
     Button btnSendImage;
     Button btnStory;
     String mFileName;
@@ -57,6 +64,69 @@ public class show_image extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //ORIENTATION FOR BUTTONS START
+        OrientationEventListener mOrientationListener = new OrientationEventListener(
+                getApplicationContext()) {
+            @Override
+            public void onOrientationChanged(int orientation) {
+                Log.d("WHATSMYORIENTATION", "onOrientationChanged: " + orientation);
+                if ((orientation > 235 && orientation < 290)) {
+                    AnimationSet animSetLogout ;
+                    animSetLogout = new AnimationSet(true);
+                    animSetLogout.setInterpolator(new DecelerateInterpolator());
+                    animSetLogout.setFillAfter(true);
+                    animSetLogout.setFillEnabled(true);
+                    final RotateAnimation animRotateLogout = new RotateAnimation(90.0f, -270.0f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.6f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.05f);
+                    animRotateLogout.setDuration(0);
+                    animRotateLogout.setFillAfter(true);
+                    animSetLogout.addAnimation(animRotateLogout);
+                    btnStory.startAnimation(animRotateLogout);
+                } else if ((orientation > 65 && orientation < 135)) {
+                    AnimationSet animSet2;
+                    animSet2 = new AnimationSet(true);
+                    animSet2.setInterpolator(new DecelerateInterpolator());
+                    animSet2.setFillAfter(true);
+                    animSet2.setFillEnabled(true);
+                    final RotateAnimation animRotate270 = new RotateAnimation(-90.0f, -90.0f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.3f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.2f);
+                    animRotate270.setDuration(0);
+                    animRotate270.setFillAfter(true);
+                    animSet2.addAnimation(animRotate270);
+                    btnStory.startAnimation(animSet2);
+
+                }else if ((orientation > 0 && orientation < 310 && orientation != 65 && orientation != 290 && orientation != 271)) {
+                    AnimationSet animSet2;
+                    animSet2 = new AnimationSet(true);
+                    animSet2.setInterpolator(new DecelerateInterpolator());
+                    animSet2.setFillAfter(true);
+                    animSet2.setFillEnabled(true);
+                    final RotateAnimation animRotate270 = new RotateAnimation(00.0f, 0.0f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+                            RotateAnimation.RELATIVE_TO_SELF, 0.7f);
+                    animRotate270.setDuration(0);
+                    animRotate270.setFillAfter(true);
+                    animSet2.addAnimation(animRotate270);
+                    btnStory.startAnimation(animSet2);
+
+                }
+            }
+        };
+
+        if (mOrientationListener.canDetectOrientation()) {
+            mOrientationListener.enable();
+        }
+
+
+
+        //ORIENTATION FOR BUTTONS END
+
+
+
+
 
         setContentView(R.layout.activity_show_image);
 
@@ -249,8 +319,9 @@ public class show_image extends AppCompatActivity {
                                 return;
                             }
 
-                            String token = task.getResult().getToken();
-                            Log.d("TOKENFIREBASE", token);
+
+                            String token = getTokenToSendTo(mtoSendUID);//get token to send to
+                            Log.d("TOKENFIREBASESEND", token);
 
                             //send notification:
                             new SendNotificationJava(token).execute();
@@ -262,5 +333,26 @@ public class show_image extends AppCompatActivity {
         }else{
             Toast.makeText(this,"Oops! Something went wrong",Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private String getTokenToSendTo(String uidToSend){
+        String tokenToSend = "";
+        dbTokenGetter = FirebaseDatabase.getInstance().getReference("Users").child(uidToSend);
+        dbTokenGetter.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                //check if users token is there
+                //if not then return
+                if(dataSnapshot.child("token").exists()) {
+
+                }
+                return;
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {}
+
+        });
+        dbTokenGetter = null;
+        return tokenToSend;
     }
 }
