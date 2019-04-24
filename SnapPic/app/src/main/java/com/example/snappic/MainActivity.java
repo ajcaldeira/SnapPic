@@ -181,9 +181,7 @@ public class MainActivity extends AppCompatActivity {
                 IS_CAM_DC = false;
                 textureView = null;
 
-                Intent intent = new Intent(MainActivity.this, ContactScreen.class);
-                startActivity(intent);
-                overridePendingTransition(R.anim.slide_in_left,R.anim.slide_out_right);
+
 
             }
 
@@ -212,9 +210,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     protected void onPause() {
-        //closeCamera();
-        //
-        // StopBackgroundThread();
+        closeCamera();
+        StopBackgroundThread();
         super.onPause();
     }
 
@@ -764,6 +761,7 @@ public class MainActivity extends AppCompatActivity {
                     animSet.addAnimation(animRotate90);
                     squirrelImg.startAnimation(animSet);
                     btnSwapCam.startAnimation(animSet);
+
                     AnimationSet animSetLogout ;
                     animSetLogout = new AnimationSet(true);
                     animSetLogout.setInterpolator(new DecelerateInterpolator());
@@ -776,6 +774,20 @@ public class MainActivity extends AppCompatActivity {
                     animRotateLogout.setFillAfter(true);
                     animSetLogout.addAnimation(animRotateLogout);
                     btnLogout.startAnimation(animSetLogout);
+                    if(isToSend){
+                        AnimationSet animSetIsToSend;
+                        animSetIsToSend = new AnimationSet(true);
+                        animSetIsToSend.setInterpolator(new DecelerateInterpolator());
+                        animSetIsToSend.setFillAfter(true);
+                        animSetIsToSend.setFillEnabled(true);
+                        final RotateAnimation animRotateSend = new RotateAnimation(90.0f, -270.0f,
+                                RotateAnimation.RELATIVE_TO_SELF, 0.8f,
+                                RotateAnimation.RELATIVE_TO_SELF, 0.6f);
+                        animRotateSend.setDuration(0);
+                        animRotateSend.setFillAfter(true);
+                        animSetIsToSend.addAnimation(animRotateSend);
+                        btnIsSend.startAnimation(animSetIsToSend);
+                    }
                 } else if ((orientation > 65 && orientation < 135)) {
                     AnimationSet animSet2;
                     animSet2 = new AnimationSet(true);
@@ -791,7 +803,22 @@ public class MainActivity extends AppCompatActivity {
                     squirrelImg.startAnimation(animSet2);
                     btnSwapCam.startAnimation(animSet2);
                     btnLogout.startAnimation(animSet2);
+                    if(isToSend){
+                        AnimationSet animSetIsToSend;
+                        animSetIsToSend = new AnimationSet(true);
+                        animSetIsToSend.setInterpolator(new DecelerateInterpolator());
+                        animSetIsToSend.setFillAfter(true);
+                        animSetIsToSend.setFillEnabled(true);
+                        final RotateAnimation animRotateSend = new RotateAnimation(-90.0f, -90.0f,
+                                RotateAnimation.RELATIVE_TO_SELF, 0.5f,
+                                RotateAnimation.RELATIVE_TO_SELF, 0.1f);
+                        animRotateSend.setDuration(0);
+                        animRotateSend.setFillAfter(true);
+                        animSetIsToSend.addAnimation(animRotateSend);
+                        btnIsSend.startAnimation(animSetIsToSend);
+                    }
                 }else if ((orientation > 0 && orientation < 310 && orientation != 65 && orientation != 290 && orientation != 271)) {
+                    //normal portrait
                     AnimationSet animSet2;
                     animSet2 = new AnimationSet(true);
                     animSet2.setInterpolator(new DecelerateInterpolator());
@@ -806,6 +833,13 @@ public class MainActivity extends AppCompatActivity {
                     squirrelImg.startAnimation(animSet2);
                     btnSwapCam.startAnimation(animSet2);
                     btnLogout.startAnimation(animSet2);
+
+                    if(isToSend){
+                        btnIsSend.startAnimation(animSet2);
+                    }
+
+
+
                 }
             }
         };
@@ -835,7 +869,7 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = getIntent();
             isToSend = intent.getExtras().getBoolean("isToSend");
             toSendUidPassed = intent.getExtras().getString("toSendUID");
-            Toast.makeText(this, toSendUidPassed, Toast.LENGTH_SHORT).show();
+
         }catch(Exception e){
             e.getStackTrace();
         }
@@ -949,8 +983,11 @@ public class MainActivity extends AppCompatActivity {
                         IS_CAM_DC = true;
                         mSurfaceTexListener = null;
                         textureView.setSurfaceTextureListener(mSurfaceTexListener);
-                        mCameraDeviceStateCallback.onDisconnected(mCameraDevice);
-
+                        //mCameraDeviceStateCallback.onDisconnected(mCameraDevice);
+                        Intent intent = new Intent(MainActivity.this, ContactScreen.class);
+                        startActivity(intent);
+                        overridePendingTransition(R.anim.slide_in_left,R.anim.slide_out_right);
+                        finish();
 
 
                     }else{
@@ -1002,8 +1039,6 @@ public class MainActivity extends AppCompatActivity {
                 ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[3]) == PackageManager.PERMISSION_GRANTED)
         {
             //IF THEY ARE GRANTED THEN:
-            //CONNECT TO THE CAMERA
-
 
         }else{
             //IF NOT GRANTED, ASK FOR THEM:

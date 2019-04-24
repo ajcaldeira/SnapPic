@@ -51,7 +51,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".show_image" />
+        <activity android:name=".show_image"
+            android:screenOrientation="portrait"
+            />
         <activity android:name=".RightScreen"
             android:screenOrientation="portrait"
             />
@@ -60,7 +62,7 @@
             />
         <activity
             android:name=".MainActivity"
-
+            android:screenOrientation="portrait"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:hardwareAccelerated="true">
             <intent-filter>

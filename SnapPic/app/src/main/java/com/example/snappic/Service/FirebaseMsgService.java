@@ -90,7 +90,7 @@ public class FirebaseMsgService extends FirebaseMessagingService {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //delete contact and children with the uid specified
-                addNewToken.child("Token").setValue(token);
+                addNewToken.child("token").setValue(token);
                 return;
             }
             @Override

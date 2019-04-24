@@ -75,6 +75,8 @@ public class LoginScreen extends AppCompatActivity {
                 phoneNumber = txtPhoneNumber.getText().toString();
                 btnWrongNumber.setVisibility(View.VISIBLE);
                 txtWrongNumber.setVisibility(View.VISIBLE);
+                btnGetNumber.setVisibility(View.INVISIBLE);
+
                 PhoneAuthProvider.getInstance().verifyPhoneNumber(
                         phoneNumber,        // Phone number to verify
                         10,                 // Timeout duration
@@ -95,6 +97,7 @@ public class LoginScreen extends AppCompatActivity {
                                 btnGetNumber.setVisibility(View.INVISIBLE);
                                 btnWrongNumber.setVisibility(View.VISIBLE);
                                 txtWrongNumber.setVisibility(View.VISIBLE);
+
                             }
                         });
 

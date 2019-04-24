@@ -48,7 +48,8 @@ import java.util.Calendar;
 import java.util.Date;
 
 public class show_image extends AppCompatActivity {
-
+    private String TOKEN_TO_SEND_TO = "";
+    private boolean TOKEN_IS_SENT = false;
     private Uri mImageUri;
     private StorageReference mStorageRef;
     private DatabaseReference mdbRef,dbRetrieveIn,dbRetrieve,dbStoryDate;
@@ -84,6 +85,7 @@ public class show_image extends AppCompatActivity {
                     animRotateLogout.setFillAfter(true);
                     animSetLogout.addAnimation(animRotateLogout);
                     btnStory.startAnimation(animRotateLogout);
+
                 } else if ((orientation > 65 && orientation < 135)) {
                     AnimationSet animSet2;
                     animSet2 = new AnimationSet(true);
@@ -231,13 +233,21 @@ public class show_image extends AppCompatActivity {
                             fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                 @Override
                                 public void onSuccess(Uri uri) {
+
+
+
+                                    //check if there is already a story
                                     Upload upload = new Upload(mFileName.trim(),
                                             uri.toString());
                                     //creates new db entry with unique id
+                                    dbStoryDate.removeValue();
                                     String uploadID = dbStoryDate.push().getKey();
                                     dbStoryDate.child(uploadID).setValue(upload);
                                     dbStoryDate.child(uploadID).child("timestamp").setValue(""+System.currentTimeMillis());
                                     Toast.makeText(show_image.this, "Set As Story!",Toast.LENGTH_SHORT).show();
+                                    Intent mainAct = new Intent(show_image.this,MainActivity.class);
+                                    startActivity(mainAct);
+                                    finish();
                                 }
                             });
                             //Toast.makeText(show_image.this, taskSnapshot.getMetadata().getReference().getDownloadUrl().toString(),Toast.LENGTH_SHORT).show();
@@ -323,11 +333,6 @@ public class show_image extends AppCompatActivity {
                             String token = getTokenToSendTo(mtoSendUID);//get token to send to
                             Log.d("TOKENFIREBASESEND", token);
 
-                            //send notification:
-                            new SendNotificationJava(token).execute();
-                            Toast.makeText(show_image.this, "Sent!", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(show_image.this, MainActivity.class);
-                            startActivity(intent);
                         }
                     });
         }else{
@@ -336,23 +341,42 @@ public class show_image extends AppCompatActivity {
     }
 
     private String getTokenToSendTo(String uidToSend){
-        String tokenToSend = "";
+
         dbTokenGetter = FirebaseDatabase.getInstance().getReference("Users").child(uidToSend);
         dbTokenGetter.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //check if users token is there
                 //if not then return
+                String tokenToSend = "";
                 if(dataSnapshot.child("token").exists()) {
+                    tokenToSend = dataSnapshot.child("token").getValue().toString();
 
+                    TOKEN_TO_SEND_TO = tokenToSend;
+                    if(!TOKEN_IS_SENT){//so it only sends once
+                        //SENDTHE NOTIFICATION
+                        new SendNotificationJava(TOKEN_TO_SEND_TO).execute();
+                        Toast.makeText(show_image.this, "Sent!", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(show_image.this, MainActivity.class);
+                        startActivity(intent);
+                        TOKEN_IS_SENT = true; //make it true so it doesnt send multiple times
+                    }
+                }else{
+                    if(!TOKEN_IS_SENT) {
+                        TOKEN_TO_SEND_TO = "";
+                        Toast.makeText(show_image.this, "This user has not finished setting up their account yet!", Toast.LENGTH_LONG).show();
+                        TOKEN_IS_SENT = true; //make it true so it doesnt alert multiple times
+                        return;
+                    }
                 }
-                return;
+
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
 
         });
+
         dbTokenGetter = null;
-        return tokenToSend;
+        return TOKEN_TO_SEND_TO;
     }
 }
