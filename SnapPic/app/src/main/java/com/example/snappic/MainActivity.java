@@ -2,6 +2,7 @@ package com.example.snappic;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -514,13 +515,8 @@ public class MainActivity extends AppCompatActivity {
                         super.onCaptureStarted(session, request, timestamp, frameNumber);
                         String rotOrientation = String.valueOf(FLIP_ORIENTATION);
                         String timeStamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new java.util.Date());
-                        //if its the back camera add a prefix of 'b' to the name
-                        if(CAMERA_FACE.equals(CAMERA_BACK)){
-                            mFileName = "b_" + rotOrientation + "_SnapPic_" + timeStamp + ".jpg";
-                        }else{
-                            mFileName = rotOrientation + "_SnapPic_" + timeStamp + ".jpg";
-                        }
-
+                        //filename of the pic just taken with a timestamp so its unique
+                        mFileName = rotOrientation + "_SnapPic_" + timeStamp + ".jpg";
 
                     }
                 };
@@ -564,24 +560,33 @@ public class MainActivity extends AppCompatActivity {
 
             //flip the image depending on the orientation it was saved
             int flipOrientation = FLIP_ORIENTATION;
-            if(CAMERA_FACE.equals(CAMERA_BACK)){
-                flipOrientation = 0;
-            }
+            //if(CAMERA_FACE.equals(CAMERA_BACK)){
+              //  flipOrientation = 0;
+            //}
+
             switch (flipOrientation){
                 case 90:
                     Matrix matrix = new Matrix();
-                    matrix.postRotate(-90);
+                    if(CAMERA_FACE.equals(CAMERA_BACK)){
+                        matrix.postRotate(90);
+                    }else{
+                        matrix.postRotate(-90);
+                    }
                     decodeImg = Bitmap.createBitmap(decodeImg,0,0,decodeImg.getWidth(),decodeImg.getHeight(),matrix,true);
 
                     break;
                 case 270:
                     Matrix matrix270 = new Matrix();
-                    matrix270.postRotate(-270);
+                    if(CAMERA_FACE.equals(CAMERA_BACK)){
+                        matrix270.postRotate(270);
+                    }else{
+                        matrix270.postRotate(-270);
+                    }
                     decodeImg = Bitmap.createBitmap(decodeImg,0,0,decodeImg.getWidth(),decodeImg.getHeight(),matrix270,true);
                     break;
             }
 
-            //flip mirror image from front cam
+            //flip mirror image from front cam ONLY
             if(CAMERA_FACE.equals(CAMERA_FRONT)){
                 Float cx = decodeImg.getWidth()/2f;
                 Float cy = decodeImg.getHeight()/2f;
@@ -597,8 +602,8 @@ public class MainActivity extends AppCompatActivity {
             }
 
             File ExternalStorageDirectory = Environment.getExternalStorageDirectory();
-            File file = new File(ExternalStorageDirectory + File.separator + mFileName);
-
+            File file = new File(ExternalStorageDirectory +  File.separator + mFileName);
+            //Log.d("WHEREISMYFILESAVING", "run: " + ExternalStorageDirectory + File.separator);
             FileOutputStream fileOutputStream = null;
             try {
                 file.createNewFile();
@@ -862,6 +867,7 @@ public class MainActivity extends AppCompatActivity {
         //Toolbar
         Toolbar toolbar = findViewById(R.id.app_bar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
 
         Log.d("DOIHAVEINTERNET", "onCreate: " + isNetworkAvailable());
