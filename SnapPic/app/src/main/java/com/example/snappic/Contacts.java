@@ -1,5 +1,5 @@
 package com.example.snappic;
-
+//CLASS TO GET THE CONTACTS FROM FIREBASE
 public class Contacts {
 
     private String name;

@@ -327,6 +327,7 @@ public class show_image extends AppCompatActivity {
                             fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                 @Override
                                 public void onSuccess(Uri uri) {
+                                    Log.d("WHATISMYDOWNLOADLINK", "onSuccess: " + uri);
                                     Upload upload = new Upload(mFileName.trim(),
                                             uri.toString());
                                     //creates new db entry with unique id

@@ -2,22 +2,17 @@ package com.example.snappic;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.ActionBar;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -42,11 +37,9 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.EventLog;
 import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
-import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.Surface;
@@ -58,13 +51,13 @@ import android.view.animation.AnimationSet;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.RotateAnimation;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.support.v7.widget.Toolbar;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import com.example.snappic.Service.ContactFetchIntentService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
@@ -87,15 +80,9 @@ import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_ON;
-import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH;
-import static android.hardware.camera2.CameraMetadata.FLASH_MODE_TORCH;
-import static android.hardware.camera2.CameraMetadata.LOGICAL_MULTI_CAMERA_SENSOR_SYNC_TYPE_APPROXIMATE;
 
 public class MainActivity extends AppCompatActivity {
     //CAMERA
@@ -406,8 +393,6 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             camManager.openCamera(mCameraID, mCameraDeviceStateCallback, mBackgroundHandler);
-            //Toast.makeText(MainActivity.this, "Cam Connected",Toast.LENGTH_SHORT).show();
-
 
         }catch(CameraAccessException e){
             e.printStackTrace();
@@ -754,7 +739,7 @@ public class MainActivity extends AppCompatActivity {
             public void onOrientationChanged(int orientation) {
                 btnLogout = findViewById(R.id.btnLogOut);
                 squirrelImg = findViewById(R.id.imageView3);
-                Log.d("WHATSMYORIENTATION", "onOrientationChanged: " + orientation);
+                //these are to check the orientation of the app and rotate the specified elements
                 if ((orientation > 235 && orientation < 290)) {
                     FLIP_ORIENTATION = 270;
                     AnimationSet animSet ;
@@ -848,9 +833,6 @@ public class MainActivity extends AppCompatActivity {
                     if(isToSend){
                         btnIsSend.startAnimation(animSet2);
                     }
-
-
-
                 }
             }
         };
@@ -898,6 +880,9 @@ public class MainActivity extends AppCompatActivity {
         btnIsSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //this is when the user clicks cancel when sending a snap
+                Intent intent = new Intent(MainActivity.this, MainActivity.class);
+                startActivity(intent);
 
             }
         });
@@ -1017,6 +1002,7 @@ public class MainActivity extends AppCompatActivity {
                         Intent intent = new Intent(MainActivity.this, ContactScreen.class);
                         startActivity(intent);
                         overridePendingTransition(R.anim.slide_in_left,R.anim.slide_out_right);
+                        StopBackgroundThread();
                         finish();
 
 
@@ -1025,13 +1011,11 @@ public class MainActivity extends AppCompatActivity {
                         Intent intent = new Intent(this, RightScreen.class);
                         startActivity(intent);
                         overridePendingTransition(R.anim.slide_in_right,R.anim.slide_out_left);
+                        StopBackgroundThread();
+                        finish();
                     }
                 }
-                else if(Math.abs(deltaY) > MIN_DISTANCE)
-                {
-                    //swipe down
 
-                }
                 break;
         }
         return super.onTouchEvent(event);

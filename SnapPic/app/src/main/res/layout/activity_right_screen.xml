@@ -29,6 +29,38 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             tools:layout_editor_absoluteY="-3dp"></fragment>
+
     </FrameLayout>
+
+    <ImageView
+        android:id="@+id/imgLobster"
+        android:layout_width="170dp"
+        android:layout_height="196dp"
+        android:layout_marginBottom="8dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/fragCtr"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/fragCtr"
+
+        app:layout_constraintVertical_bias="0.508"
+        app:srcCompat="@drawable/lobster" />
+
+    <TextView
+        android:id="@+id/txtLonely"
+        android:layout_width="264dp"
+        android:layout_height="34dp"
+        android:layout_marginTop="204dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center"
+        android:text="Lonely Lobster! Nothing here!"
+        android:textSize="18sp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/fragCtr"
+        app:layout_constraintEnd_toEndOf="@+id/imgLobster"
+        app:layout_constraintHorizontal_bias="0.503"
+        app:layout_constraintStart_toStartOf="@+id/imgLobster"
+        app:layout_constraintTop_toTopOf="@+id/imgLobster"
+        app:layout_constraintVertical_bias="0.022" />
 
 </android.support.constraint.ConstraintLayout>

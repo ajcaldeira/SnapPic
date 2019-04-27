@@ -39,7 +39,7 @@
             </intent-filter>
         </service>
         <service
-            android:name=".ContactFetchIntentService"
+            android:name=".Service.ContactFetchIntentService"
             android:enabled="true">
 
         </service>

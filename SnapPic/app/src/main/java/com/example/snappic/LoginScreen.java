@@ -151,6 +151,13 @@ public class LoginScreen extends AppCompatActivity {
         });
 
     }
+    //OVERIDE BACK BUTTON PRESS
+    @Override
+    public void onBackPressed() {
+        moveTaskToBack(true);
+        this.finish();
+        System.exit(0);
+    }
     private void networkRule(){
         btnWrongNumber = findViewById(R.id.btnWrongNumber);
         btnGetNumber = findViewById(R.id.btnGetNumber);

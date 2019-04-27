@@ -22,6 +22,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -53,6 +54,8 @@ public class RightScreen extends AppCompatActivity {
     FrameLayout frameLayoutFragment;
     ImageView fragImgView;
     ImageView imgExitStory;
+    ImageView imgLobster;
+    TextView txtLonely;
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,6 +80,8 @@ public class RightScreen extends AppCompatActivity {
         imgExitStory = findViewById(R.id.imgExitStory);
         frameLayoutFragment = findViewById(R.id.fragCtr);
         frameLayoutFragment.setVisibility(View.INVISIBLE);
+        imgLobster = findViewById(R.id.imgLobster);
+        txtLonely = findViewById(R.id.txtLonely);
         getUIDContactList();
         imgExitStory.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -136,9 +141,9 @@ public class RightScreen extends AppCompatActivity {
                 }else{
                     ORIENTATION_FLIP = 0; //this will happen if the back camera was used as well as back doesnt need flipping.
                 }
-                //use picasso to flip the image
+                //use picasso to flip the image and load it into the image view
                 Picasso.get().load(fragImg.getUrl()).rotate(-ORIENTATION_FLIP).into(fragImgView);
-                Log.d("picassoimage", fragImg.getImgName() + " = "+ORIENTATION_FLIP);
+
 
             }
         });
@@ -175,6 +180,14 @@ public class RightScreen extends AppCompatActivity {
             GetStory(currentSP,spUsersName);
             loop_Incrementer++;
         }
+        if(loop_Incrementer == 0){
+            //if the user has no contatcs or there are no stores
+            imgLobster.setVisibility(View.VISIBLE);
+            txtLonely.setVisibility(View.VISIBLE);
+        }else{
+            imgLobster.setVisibility(View.INVISIBLE);
+            txtLonely.setVisibility(View.INVISIBLE);
+        }
 
     }
 
@@ -186,8 +199,7 @@ public class RightScreen extends AppCompatActivity {
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                //iterate through db and check if the number the user just used to sign up exists already
-
+                //iterate through the users contacts Story folders to see if there is a story
                 for(DataSnapshot storySnapshot: dataSnapshot.getChildren()){
                     RetrieveStory retrieveStory = storySnapshot.getValue(RetrieveStory.class);
                     String storyTimeStamp = retrieveStory.timestamp;

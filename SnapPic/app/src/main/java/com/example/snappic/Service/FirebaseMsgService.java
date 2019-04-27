@@ -1,5 +1,5 @@
 package com.example.snappic.Service;
-
+//MESSAGE SERVICE
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -37,25 +37,27 @@ public class FirebaseMsgService extends FirebaseMessagingService {
 
     }
 
+    //when a notification is received
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        showNotification(remoteMessage.getNotification().getTitle(),remoteMessage.getNotification().getBody());
-        String click_action = remoteMessage.getNotification().getClickAction();
+        showNotification(remoteMessage.getNotification().getTitle(),remoteMessage.getNotification().getBody());//get everythign from the json string and compile it in the large function below
+        String click_action = remoteMessage.getNotification().getClickAction(); //opens activity when clicked
 
     }
 
+    //configure attributes of the notification
     private void showNotification(String title, String body) {
         NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         String NOTIFICATION_CHANNEL_ID = "com.example.snappic.test";
         Intent intent = new Intent(this, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //intent flag - closes other activities running above this one in the stack
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,intent,0);
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){//need oreo
             NotificationChannel notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID,"Notification",NotificationManager.IMPORTANCE_DEFAULT);
-            notificationChannel.setDescription("Angelo Test Description of app notification");
+            notificationChannel.setDescription("");
             notificationChannel.enableLights(true);
-            notificationChannel.setLightColor(Color.BLUE);
+            notificationChannel.setLightColor(Color.GREEN);
             notificationChannel.setVibrationPattern(new long[]{0,1000,500,1000});
             notificationChannel.enableLights(true);
             notificationManager.createNotificationChannel(notificationChannel);
@@ -90,7 +92,7 @@ public class FirebaseMsgService extends FirebaseMessagingService {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //delete contact and children with the uid specified
-                addNewToken.child("token").setValue(token);
+                addNewToken.child("token").setValue(token);//if a new token is not in the db write it.
                 return;
             }
             @Override

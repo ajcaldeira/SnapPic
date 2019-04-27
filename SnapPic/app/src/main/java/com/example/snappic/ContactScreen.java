@@ -1,17 +1,13 @@
 package com.example.snappic;
-
+//DEALS WITH THE CONTACT SCREEN
 import android.annotation.SuppressLint;
 import android.app.Dialog;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -25,7 +21,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -33,6 +28,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.snappic.Service.ContactFetchIntentService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -41,49 +37,47 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
 
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ContactScreen extends AppCompatActivity  {
-    private static final String SHARED_PREFS_MESSAGES = "messagesSP";
-    private int ARRAY_SIZE;
-    private int ORIENTATION_FLIP = 0;
-    private boolean DELETING_FLAG;
+    private static final String SHARED_PREFS_MESSAGES = "messagesSP";//for shared prefs
+    private int ARRAY_SIZE; //to keep track of the array size and so firebase doesnt do something unexpected
+    private int ORIENTATION_FLIP = 0; //the orientation of the phone - used to flip images when viewing messages
+    private boolean DELETING_FLAG; //this is so firebase doesnt delete when it shouldent
     private boolean DELETING_JUST_ADDED = false; //stop the db from auto deleting something if it was previously deleted
     private boolean DELETING_JUST_ADDED_CONT_LIST = true; //stop the db from auto deleting something if it was previously deleted
-    private int NO_CONTACTS;
-    private int CURRENT_MESSAGE;
-    private String CURRENT_MESSAGE_USERID;
-    private String UID_TO_DELETE;
-    private int USERS_TO_ADD = 1;
-    private float x1,x2;
-    static final int MIN_DISTANCE = 150;
+    private int NO_CONTACTS; //number of contacts user has
+    private int CURRENT_MESSAGE; //the current message being displayed
+    private String CURRENT_MESSAGE_USERID; //UID of the user's messages being displayed
+    private String UID_TO_DELETE; //UID of the contact to delete
+    private int USERS_TO_ADD = 1; //always 1 to add new users
+    private float x1,x2; //for sliding between screens
+    static final int MIN_DISTANCE = 150; //for sliding right between screens
 
+    //Declaring vars
     ListView listContacts;
     TextView txtContName;
     TextView txtContNumber;
     TextView txtNewContacts;
     ProgressBar progressBarContact;
+    EditText txtSearchNumber;
+    Button btnAddContact;
+    ImageButton btnContactAlert;
+    ImageView imgShowMessage;
+    //Firebase
+    private FirebaseAuth mAuth;
     DatabaseReference dbRef;
     DatabaseReference dbRefDeleteContactReq;
     DatabaseReference dbRefAdd;
     DatabaseReference dbRefADelete;
     DatabaseReference dbRefViewMessage;
     DatabaseReference dbRefDeleteMessage;
-    DatabaseReference dbContacts;
-    DatabaseReference dbCheckForMessages;
     DatabaseReference dbContactsSingleForeground;
+    //Arrays
     ArrayList<Contacts> arrayList = new ArrayList<>();
     ArrayList<String> newMessagesArrayList = new ArrayList<>();
     ArrayList<String> newMessagesIDArrayList = new ArrayList<>();
     ArrayList<String> newMessagesFileName = new ArrayList<>();
-    EditText txtSearchNumber;
-    Button btnAddContact;
-    ImageButton btnContactAlert;
-    ImageView imgShowMessage;
     //POP UP
     Dialog myDialog;
     Dialog myContactDialog;
@@ -93,11 +87,11 @@ public class ContactScreen extends AppCompatActivity  {
     ImageButton btnNewContact;
     TextView txtPopName;
     TextView txtPopPhoneNo;
-    private FirebaseAuth mAuth;
+
+    //shared prefs
     private int counter = 0;
     public static final String SHARED_PREFS = "ContactSP";
     public static final String SHARED_PREFS_SPECIFIC = "SpecificSP";
-
     //recycler view
     private RecyclerView newContRecycler;
     private RecyclerView.Adapter newContRecyclerAdapter;//provides only as many items as we currently need
@@ -131,6 +125,7 @@ public class ContactScreen extends AppCompatActivity  {
         //new contact recycler view and items:
         btnContactAlert = findViewById(R.id.btnContactAlert);
 
+        //sliding back to main screen
         listContacts.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -167,22 +162,23 @@ public class ContactScreen extends AppCompatActivity  {
         listContacts.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                Contacts contact = arrayList.get(position);
-                //Toast.makeText(ContactScreen.this, contact.getName(), Toast.LENGTH_SHORT).show();
-                myDialog.setContentView(R.layout.custom_popup);
+                //when the user clicks on a contact
+                Contacts contact = arrayList.get(position); //get the position in the arraylist
+                myDialog.setContentView(R.layout.custom_popup); //set up dialog, link it to the layout
+                //all vars for the dialog
                 txtPopName = myDialog.findViewById(R.id.txtPopName);
                 txtPopName.setText(contact.getName());
                 txtPopPhoneNo = myDialog.findViewById(R.id.txtPopPhoneNo);
                 txtPopPhoneNo.setText(contact.getNumber());
-                UID_TO_DELETE = contact.getNumber();
-                myDialog.show();
+                UID_TO_DELETE = contact.getNumber(); // give this global var the number of the user selected for if we want to delete them
+                myDialog.show(); // show pop up
             }
 
         });
         btnNewContact.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //set up and open dialog
                 myContactDialog.setContentView(R.layout.add_contact_dialog);
                 txtSearchNumber = myContactDialog.findViewById(R.id.txtSearchNumber);
                 btnAddContact = myContactDialog.findViewById(R.id.btnAddContact);
@@ -193,6 +189,7 @@ public class ContactScreen extends AppCompatActivity  {
         btnContactAlert.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //open the dialog the holds the recycler view that
                 newContactDialog.setContentView(R.layout.new_contact_recycler);
                 newContRecycler = newContactDialog.findViewById(R.id.contactRecyclerView);
                 newContRecycler.setHasFixedSize(true);//recycler view will not change size no matter how many items are in it - better performance: https://www.youtube.com/watch?v=17NbUcEts9c 11:50
@@ -202,13 +199,10 @@ public class ContactScreen extends AppCompatActivity  {
 
                 //first pass 0 as it is the val for drag and drop
                 new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-
-
                     @Override
                     public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder viewHolder1) {
                         return false;//drag and drop
                     }
-
                     @Override
                     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                         New_contact_item currentUser;
@@ -261,24 +255,27 @@ public class ContactScreen extends AppCompatActivity  {
                         //left is 4
                         //right is 8
                     }
-                }).attachToRecyclerView(newContRecycler);
+                }).attachToRecyclerView(newContRecycler);//attach it to the recycler view
 
             }
         });
+        //make sure the intent service is running to update everything
         Intent serviceIntent = new Intent(ContactScreen.this, ContactFetchIntentService.class);
         startService(serviceIntent);
 
     }
 
     @Override
-    protected void onResume() {
+    protected void onResume() {//when activity is hidden from view, this is called when it comes back
         super.onResume();
+        //when the screen is resumed, make sure the service is running by running it again just in case it is not
         Intent serviceIntent = new Intent(ContactScreen.this, ContactFetchIntentService.class);
         startService(serviceIntent);
     }
 
+    //get the current user's contact requests from firebase
     public void getContactRequest(){
-        New_contact_items.clear();
+        New_contact_items.clear();//make sure the array is empty first so there are no doubles
         dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("ReceivedContactRequests");
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -299,15 +296,15 @@ public class ContactScreen extends AppCompatActivity  {
 
 
                         String uid = ds.getKey();
-                        if(New_contact_items.size() == ARRAY_SIZE){
+                        if(New_contact_items.size() == ARRAY_SIZE){//make sure the array does not get extra contacts added as firebase is asynchronous
                             break;
                         }else{
                             New_contact_items.add(new New_contact_item(currentName,currentNumber,uid));
                         }
 
                     }
-                    setUpRecyclerView();
-                    Log.d("DELETEDTHEM", "new size: " + String.valueOf(New_contact_items.size()));
+                    setUpRecyclerView(); //set up the recycler view, basically refresh it
+
                 }
             }
             @Override
@@ -338,9 +335,9 @@ public class ContactScreen extends AppCompatActivity  {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             //delete contact and children with the uid specified
-                            if(!DELETING_JUST_ADDED_CONT_LIST){
+                            if(!DELETING_JUST_ADDED_CONT_LIST){//so it doesn't delete automatically without being clicked
                                 dataSnapshot.getRef().removeValue();
-                                Log.d("DELETINGTHETHING", "onDataChange: YA BOI");
+
                             }
                             return;
                         }
@@ -355,6 +352,7 @@ public class ContactScreen extends AppCompatActivity  {
             }
         }
     }
+    //remove the user form the received contacts
     public void deleteContactRequest(String currentUID){
         dbRefDeleteContactReq = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("ReceivedContactRequests").child(currentUID);
         dbRefDeleteContactReq.addValueEventListener(new ValueEventListener() {
@@ -373,15 +371,14 @@ public class ContactScreen extends AppCompatActivity  {
         DELETING_JUST_ADDED = false;
         dbRefDeleteContactReq = null;
     }
+    //once all the users messages have been viewed, clear them from that user
     public void deleteMessages(final String currentMessageID){
         dbRefDeleteMessage = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Received");
         dbRefDeleteMessage.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //delete contact and children with the uid specified
-
                 dataSnapshot.child(CURRENT_MESSAGE_USERID).child(currentMessageID).getRef().removeValue();
-
                 return;
             }
 
@@ -421,12 +418,13 @@ public class ContactScreen extends AppCompatActivity  {
         });
     }
 
+    //set up the recycler view
     public void setUpRecyclerView(){
         if(newContRecycler != null){
             newContRecyclerLayoutManager = new LinearLayoutManager(ContactScreen.this);
             newContRecyclerAdapter = new New_contact_recycler_adapter(New_contact_items);
             newContRecycler.setLayoutManager(newContRecyclerLayoutManager);
-            newContRecycler.setAdapter(newContRecyclerAdapter);
+            newContRecycler.setAdapter(newContRecyclerAdapter); //link it to the adapter
             btnContactAlert = findViewById(R.id.btnContactAlert);
         }
     }

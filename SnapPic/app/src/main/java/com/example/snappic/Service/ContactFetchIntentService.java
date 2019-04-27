@@ -1,5 +1,6 @@
-package com.example.snappic;
-
+package com.example.snappic.Service;
+//THIS IS A BACKGROUND SERVICE, IT CHECKS THE NUMBER OF CONTACTS, CONTACT REQUESTS, SETS ALL THE SHARED PREFS SO THIS INFORMATION CAN BE CARRIED OUT THROUGH THE APP
+//THIS SERVICE CANNOT EFFECT UI AT ALL
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.example.snappic.User;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -32,46 +34,49 @@ public class ContactFetchIntentService extends IntentService {
     public static final String SHARED_PREFS_REQ_CONTACTS = "ContactREQ";
     public static final String SHARED_PREFS_MESSAGES = "messagesSP";
 
-
-    // This schedule a runnable task every 2 minutes
-
     @Override
     public void onCreate() {
         super.onCreate();
         mAuth = FirebaseAuth.getInstance();
-
+        //MAKE SURE WE HAVE THE INSTANCE SO WE KNOW WHICH USER WERE CHECKING
     }
 
     public ContactFetchIntentService() {
         super("ContactFetchIntentService");
-        setIntentRedelivery(true);
+        setIntentRedelivery(true);//ASYNCHRONOUS REQUEST TO RUN THE SERVICE
     }
+    //GETTER
     public String getSharedPrefContactVar(){
         return SHARED_PREFS;
     }
+
+    //SAVE SHARED PREFERENCES THAT HOLD UID AND ANOTHER HOLDING USERS NAME
     public void SaveSharedPrefs(String spName, String uid,String spUsersName,String contactSPRef){
         SharedPreferences contactSharedPref = getSharedPreferences(contactSPRef,MODE_PRIVATE);
         SharedPreferences.Editor editor = contactSharedPref.edit();
-        editor.putString(spName, uid);
-        editor.putString(uid, spUsersName);
-        editor.apply();
+        editor.putString(spName, uid);//this is a UID for the shared pref, cUID0,cUID1 etc.. used to loop later
+        editor.putString(uid, spUsersName); //stores the first name of the user with their uid as key - used to loop through later
+        editor.apply();//apply the changes
     }
     @Override
     protected void onHandleIntent(Intent intent) {
+        //starts worker thread with request to process
         String uid = mAuth.getUid();
+        GetUserContacts(uid,false); //updae the user's contact list - calls SaveSharedPrefs() so info can be used throughout app
+        CheckIfUserHasContactRequest(); //check if the user has any contact requests
+        checkUserHasMessages(); //check if the user has nay new messages
 
-        GetUserContacts(uid,false);
-        CheckIfUserHasContactRequest();
-        checkUserHasMessages();
-        Log.d("ISMYSERVICERUNNING", "RUNNING!");
+        //Log.d("ISMYSERVICERUNNING", "RUNNING!");
     }
 
+    //check if the user has nay new messages
     public void checkUserHasMessages(){
         //number of contacts
         SharedPreferences noContactSharedPref = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
         int noOfContacts = noContactSharedPref.getInt("noContacts",0);
 
         for(int i = 0; i < noOfContacts; i++){
+            //loop through shared pref using the unique id as specified previously
             String currentUID = noContactSharedPref.getString("cUID" + i,"");
             checkUserHasMessagesDB(currentUID);
 
@@ -105,14 +110,13 @@ public class ContactFetchIntentService extends IntentService {
                     SaveSharedPrefs(spName,cUID,dbName,contactSPRef);
                     counter++;
                 }
+                //save the NUMBER of contacts so we know how many to itterate through later
                 SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
                 SharedPreferences.Editor editor = contactSharedPref.edit();
                 editor.putInt("noContacts", counter);
                 editor.apply();
 
             }
-
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
 
@@ -126,10 +130,9 @@ public class ContactFetchIntentService extends IntentService {
     public void updateNumContactReq(int noContacts){
         SharedPreferences contactSharedPrefReq = getSharedPreferences(SHARED_PREFS_REQ_CONTACTS,MODE_PRIVATE);
         SharedPreferences.Editor editor = contactSharedPrefReq.edit();
-        editor.putInt("numOfContactsRequests", noContacts);
+        editor.putInt("numOfContactsRequests", noContacts);//number of contact requests
         editor.apply();
     }
-
 
     //check if the user has a new contact request
     public void CheckIfUserHasContactRequest(){
@@ -149,8 +152,6 @@ public class ContactFetchIntentService extends IntentService {
                             updateNumContactReq(0);
                         }
                     }
-
-
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
@@ -176,12 +177,9 @@ public class ContactFetchIntentService extends IntentService {
                 updateSharedPrefsIfMessages(noMessages,cUID);
                 //get the number of new messages and the UID of the user that the message is from
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
             }
-
         });
 
     }
