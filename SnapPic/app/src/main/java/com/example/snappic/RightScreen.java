@@ -1,12 +1,17 @@
 package com.example.snappic;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -51,8 +56,20 @@ public class RightScreen extends AppCompatActivity {
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_right_screen);
+        if(!isNetworkAvailable()){
+            new AlertDialog.Builder(this)
+                    .setTitle("Internet Needed")
+                    .setMessage("Please connect to the internet before using this app!")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    }).create().show();
+        }
         listStory = findViewById(R.id.listStory);
         mAuth = FirebaseAuth.getInstance();
         fragment = new FragmentStory();
@@ -111,13 +128,15 @@ public class RightScreen extends AppCompatActivity {
                 Story fragImg = arrayList.get(position);
                 //get the first letter of the name which will be 0, 9 or 2
                 String x = fragImg.getImgName().substring(0,1);
+
                 if(x.equals("2")){//270 degrees
                     ORIENTATION_FLIP = 270;
                 }else if(x.equals("9")){
                     ORIENTATION_FLIP = 90;
                 }else{
-                    ORIENTATION_FLIP = 0;
+                    ORIENTATION_FLIP = 0; //this will happen if the back camera was used as well as back doesnt need flipping.
                 }
+                //use picasso to flip the image
                 Picasso.get().load(fragImg.getUrl()).rotate(-ORIENTATION_FLIP).into(fragImgView);
                 Log.d("picassoimage", fragImg.getImgName() + " = "+ORIENTATION_FLIP);
 
@@ -125,7 +144,12 @@ public class RightScreen extends AppCompatActivity {
         });
 
     }
-
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
     @Override
     public void onBackPressed() {
         moveTaskToBack(true);

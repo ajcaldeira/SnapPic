@@ -131,24 +131,21 @@ public class ContactFetchIntentService extends IntentService {
     }
 
 
+    //check if the user has a new contact request
     public void CheckIfUserHasContactRequest(){
         dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid());
         dbRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //iterate through db and check if the number the user just used to sign up exists already
-
-
                     if(true){
                         //check if the user already sent a contact request
                         if(dataSnapshot.child("ReceivedContactRequests").exists()){
-                            Log.d("HASREQ", "HAS REQUEST: " + dataSnapshot.child("ReceivedContactRequests").getChildrenCount());
                             //new requests
                             int noContactReq = (int)dataSnapshot.child("ReceivedContactRequests").getChildrenCount();
                             updateNumContactReq(noContactReq);
                         }else{
                             //nothing new
-                            Log.d("HASREQ", "HAS NO REQUEST");
                             updateNumContactReq(0);
                         }
                     }
@@ -160,13 +157,16 @@ public class ContactFetchIntentService extends IntentService {
         });
     }
 
+    //this is called by the below function (checkUserHasMessagesDB) if the user has a new message
     public void updateSharedPrefsIfMessages(int noMessages,String currentContactUID){
         SharedPreferences contactMessagesSP = getSharedPreferences(SHARED_PREFS_MESSAGES,MODE_PRIVATE);
         SharedPreferences.Editor editor = contactMessagesSP.edit();
         editor.putInt(currentContactUID, noMessages);
         editor.apply();
+        //this updates the shared preferences with the info collected in checkUserHasMessagesDB
     }
 
+    //checks firebase and check if the user has new messages and get the amount they have
     public void checkUserHasMessagesDB(final String cUID){
         dbCheckForMessages = FirebaseDatabase.getInstance().getReference("Users");
         dbCheckForMessages.addValueEventListener(new ValueEventListener() {
@@ -174,7 +174,7 @@ public class ContactFetchIntentService extends IntentService {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 int noMessages = (int)dataSnapshot.child(mAuth.getUid()).child("Received").child(cUID).getChildrenCount();
                 updateSharedPrefsIfMessages(noMessages,cUID);
-                Log.d("TESTTHINGINHHHHGHG", "onDataChange: " + noMessages);
+                //get the number of new messages and the UID of the user that the message is from
             }
 
             @Override

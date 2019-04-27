@@ -3,12 +3,17 @@ package com.example.snappic;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -45,8 +50,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ContactScreen extends AppCompatActivity  {
     private static final String SHARED_PREFS_MESSAGES = "messagesSP";
     private int ARRAY_SIZE;
+    private int ORIENTATION_FLIP = 0;
     private boolean DELETING_FLAG;
     private boolean DELETING_JUST_ADDED = false; //stop the db from auto deleting something if it was previously deleted
+    private boolean DELETING_JUST_ADDED_CONT_LIST = true; //stop the db from auto deleting something if it was previously deleted
     private int NO_CONTACTS;
     private int CURRENT_MESSAGE;
     private String CURRENT_MESSAGE_USERID;
@@ -72,6 +79,7 @@ public class ContactScreen extends AppCompatActivity  {
     ArrayList<Contacts> arrayList = new ArrayList<>();
     ArrayList<String> newMessagesArrayList = new ArrayList<>();
     ArrayList<String> newMessagesIDArrayList = new ArrayList<>();
+    ArrayList<String> newMessagesFileName = new ArrayList<>();
     EditText txtSearchNumber;
     Button btnAddContact;
     ImageButton btnContactAlert;
@@ -207,6 +215,7 @@ public class ContactScreen extends AppCompatActivity  {
                         int position;
                         String uid;
                         switch(direction){
+                            //slide left to delete a contact request
                             case 4:
                                 //delete item from the requested contact list
                                 position = viewHolder.getAdapterPosition();
@@ -221,8 +230,9 @@ public class ContactScreen extends AppCompatActivity  {
                                // startActivity(getIntent());
                                 break;
                             case 8:
-
+                                //sl;ide right to accept a contact request
                                 USERS_TO_ADD = 1;
+                                DELETING_JUST_ADDED_CONT_LIST = true;
                                 //accept contact request
                                 //GET POS and put uid into a variable
                                 position = viewHolder.getAdapterPosition();
@@ -306,35 +316,39 @@ public class ContactScreen extends AppCompatActivity  {
     }
     //ONCLICK for delete contact button when user selects a contact in their list
     public void deleteContactInContacts(View v){
-        myDialog.dismiss();
-        String SHARED_PREFS = getSharedPrefContactVar();
-        SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);
+        DELETING_JUST_ADDED_CONT_LIST = false;//only false when the button is physically clicked
+        myDialog.dismiss();//get rid of the dialog box
+        String SHARED_PREFS = getSharedPrefContactVar();//load the shared pref id
+        SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS, MODE_PRIVATE);//mode private so only my app can access
 
         //shared prefs with uid linked to phone number
         SharedPreferences contactSharedPrefsSpecific = getSharedPreferences(SHARED_PREFS_SPECIFIC, MODE_PRIVATE);
         int noContacts = contactSharedPref.getInt("noContacts",0);
         int loop_Incrementer = 0;
+        //loop through the contacts shared prefs to match the phone number with the one stored in shared prefs.
+        //then delete that specific one.
         while(loop_Incrementer != noContacts){
             String spName = "cUID" + String.valueOf(loop_Incrementer);
             String uid = contactSharedPref.getString(spName,"");
             String userNumber = contactSharedPrefsSpecific.getString(uid,"");
             if(userNumber.equals(UID_TO_DELETE)){
-
-
                     //if the number the user tapped on is equal to the current shared pref then end the loop
                     dbRefADelete = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("Contacts").child(uid);
                     dbRefADelete.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             //delete contact and children with the uid specified
-                            dataSnapshot.getRef().removeValue();
+                            if(!DELETING_JUST_ADDED_CONT_LIST){
+                                dataSnapshot.getRef().removeValue();
+                                Log.d("DELETINGTHETHING", "onDataChange: YA BOI");
+                            }
                             return;
                         }
                         @Override
                         public void onCancelled(@NonNull DatabaseError databaseError) {}
 
                     });
-
+                dbRefADelete = null;
                 break;
             }else {
                 loop_Incrementer++;
@@ -426,10 +440,25 @@ public class ContactScreen extends AppCompatActivity  {
         changeNumberOfContactRequestsUI();
         SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
         NO_CONTACTS = contactSharedPref.getInt("noContacts",0);
+        if(!isNetworkAvailable()){
+            progressBarContact.setVisibility(View.INVISIBLE);
+            new AlertDialog.Builder(this)
+                    .setTitle("Internet Needed")
+                    .setMessage("Please connect to the internet before using this app!")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
 
-
+                        }
+                    }).create().show();
+        }
     }
-
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
     public void changeNumberOfContactRequestsUI(){
         SharedPreferences contactSharedPrefReq = getSharedPreferences("ContactREQ", MODE_PRIVATE);
         int currentREQ = contactSharedPrefReq.getInt("numOfContactsRequests",0);
@@ -478,27 +507,14 @@ public class ContactScreen extends AppCompatActivity  {
                 GetUserContacts(mAuth.getUid(),false);
                 startService(serviceIntent);
                 changeNumberOfContactRequestsUI();
-
                 getContactRequest();
+
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
         Intent serviceIntent = new Intent(ContactScreen.this, ContactFetchIntentService.class);
         startService(serviceIntent);
-    }
-    public void sendContactRequest(){
-        dbRef = FirebaseDatabase.getInstance().getReference("Users");
-        dbRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                //iterate through db and check if the number the user just used to sign up exists already
-
-
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {}
-        });
 
     }
 
@@ -513,6 +529,7 @@ public class ContactScreen extends AppCompatActivity  {
         Log.d("VIEWMYMESSAGES", "viewMessages: dwdwdwwd");
         newMessagesArrayList.clear();
         newMessagesIDArrayList.clear();
+        newMessagesFileName.clear();
         //shared prefs with uid linked to phone number
         SharedPreferences contactSharedPrefsSpecific = getSharedPreferences(SHARED_PREFS_SPECIFIC, MODE_PRIVATE);
         int noContacts = contactSharedPref.getInt("noContacts",0);
@@ -534,28 +551,41 @@ public class ContactScreen extends AppCompatActivity  {
                             //GET EACH MESSAGE FOR THE SPECIFIC USER
                             //Log.d("VIEWMYMESSAGES", userSnapshot.child("mImageUrl").getValue().toString());
                             String imageURL;
-
                             imageURL = userSnapshot.child("mImageUrl").getValue().toString().trim();
+                            String imgName;
+                            imgName = userSnapshot.child("mName").getValue().toString().trim();
                             //Log.d("VIEWMYMESSAGES", "onDataChange: " + imageURL);
                             newMessagesArrayList.add(imageURL.trim());
                             newMessagesIDArrayList.add(userSnapshot.getKey());
+                            newMessagesFileName.add(imgName.trim());
                             Log.d("VIEWMYMESSAGES", "im running for no real reason -_-");
                             //newMessagesIDArrayList.add();
                             counter++;
                         }
 
-
+                        //make sure the array isnt empty and a flag so firebase doesnt delete it
                         if(newMessagesArrayList.size() != 0 && !DELETING_FLAG){
                             Log.d("VIEWMYMESSAGES", "I AM GONNA SHOW THE IMAGES WOO");
                             viewMessageDialog.setContentView(R.layout.show_message);
                             imgShowMessage = viewMessageDialog.findViewById(R.id.imgShowMessage);
-                            Picasso.get().load(newMessagesArrayList.get(0)).into(imgShowMessage);
+                            //get the first letter of the file name to decide if we rotate it.
+                            String x = newMessagesFileName.get(0).substring(0,1);
+                            if(x.equals("2")){//270 degrees
+                                ORIENTATION_FLIP = 270;
+                            }else if(x.equals("9")){
+                                ORIENTATION_FLIP = 90;
+                            }else{
+                                ORIENTATION_FLIP = 0;
+                            }
+                            //rotate it to MINUS ORIENTATION_FLIP
+                            Picasso.get().load(newMessagesArrayList.get(0)).rotate(-ORIENTATION_FLIP).into(imgShowMessage);
                             CURRENT_MESSAGE = 0;
                             viewMessageDialog.show();
                         }else{
                             Log.d("VIEWMYMESSAGES", "I GONNA FINISH NOW :D");
                             newMessagesArrayList.clear();
                             newMessagesIDArrayList.clear();
+                            newMessagesFileName.clear();
                             viewMessageDialog.hide();
                             Toast.makeText(ContactScreen.this, "No Messages To Show", Toast.LENGTH_SHORT).show();
                         }
@@ -696,7 +726,7 @@ public class ContactScreen extends AppCompatActivity  {
         });
 
     }
-
+    //delete the messages when the =last message is clicked on
     public void testOnClick(View v){
 
         int sizeOfArray = newMessagesArrayList.size();

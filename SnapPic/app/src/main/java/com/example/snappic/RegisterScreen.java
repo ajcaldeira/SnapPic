@@ -26,14 +26,14 @@ public class RegisterScreen extends AppCompatActivity {
         btnReg = findViewById(R.id.btnReg);
         txtPhone = findViewById(R.id.txtPhone);
 
-
-
     }
 
 
 
     private void registerUser(){
+
         String phoneNumber = txtPhone.getText().toString().trim();
+
     }
     public void RegClick(View v)
     {

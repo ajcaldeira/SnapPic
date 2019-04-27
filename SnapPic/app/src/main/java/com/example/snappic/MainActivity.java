@@ -2,7 +2,6 @@ package com.example.snappic;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -29,6 +28,8 @@ import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.Image;
 import android.media.ImageReader;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
@@ -37,6 +38,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.EventLog;
@@ -92,6 +94,7 @@ import java.util.List;
 import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_ON;
 import static android.hardware.camera2.CameraMetadata.CONTROL_AE_MODE_ON_ALWAYS_FLASH;
 import static android.hardware.camera2.CameraMetadata.FLASH_MODE_TORCH;
+import static android.hardware.camera2.CameraMetadata.LOGICAL_MULTI_CAMERA_SENSOR_SYNC_TYPE_APPROXIMATE;
 
 public class MainActivity extends AppCompatActivity {
     //CAMERA
@@ -495,27 +498,36 @@ public class MainActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void startStillCaptureRequest(){
-        try {
-            mCapReqBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            mCapReqBuilder.addTarget(mImageReader.getSurface());
-            mCapReqBuilder.set(CaptureRequest.JPEG_ORIENTATION,mTotalRotation);
 
-            //we need a custom capture callback
-            CameraCaptureSession.CaptureCallback stillCaptureCallback = new CameraCaptureSession.CaptureCallback() {
-                @Override
-                public void onCaptureStarted(CameraCaptureSession session, CaptureRequest request, long timestamp, long frameNumber) {
-                    super.onCaptureStarted(session, request, timestamp, frameNumber);
-                    String rotOrientation = String.valueOf(FLIP_ORIENTATION);
-                    String timeStamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new java.util.Date());
-                    mFileName = rotOrientation + "_SnapPic_" + timeStamp + ".jpg";
+        if(!isNetworkAvailable()){
+            networkRule();
+        }else{
+            try {
+                mCapReqBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+                mCapReqBuilder.addTarget(mImageReader.getSurface());
+                mCapReqBuilder.set(CaptureRequest.JPEG_ORIENTATION,mTotalRotation);
 
-                }
-            };
+                //we need a custom capture callback
+                CameraCaptureSession.CaptureCallback stillCaptureCallback = new CameraCaptureSession.CaptureCallback() {
+                    @Override
+                    public void onCaptureStarted(CameraCaptureSession session, CaptureRequest request, long timestamp, long frameNumber) {
+                        super.onCaptureStarted(session, request, timestamp, frameNumber);
+                        String rotOrientation = String.valueOf(FLIP_ORIENTATION);
+                        String timeStamp = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(new java.util.Date());
+                        //if its the back camera add a prefix of 'b' to the name
+                        if(CAMERA_FACE.equals(CAMERA_BACK)){
+                            mFileName = "b_" + rotOrientation + "_SnapPic_" + timeStamp + ".jpg";
+                        }else{
+                            mFileName = rotOrientation + "_SnapPic_" + timeStamp + ".jpg";
+                        }
 
 
-            mPreviewCapSession.capture(mCapReqBuilder.build(),stillCaptureCallback, null);//null coz we already in the background thread
-        } catch (CameraAccessException e) {
-            e.printStackTrace();
+                    }
+                };
+                mPreviewCapSession.capture(mCapReqBuilder.build(),stillCaptureCallback, null);//null coz we already in the background thread
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -531,9 +543,6 @@ public class MainActivity extends AppCompatActivity {
             mBackgroundHandler.post(new ImageSave(img));
         }
     };
-
-
-
 
     private class ImageSave implements Runnable{
 
@@ -555,6 +564,9 @@ public class MainActivity extends AppCompatActivity {
 
             //flip the image depending on the orientation it was saved
             int flipOrientation = FLIP_ORIENTATION;
+            if(CAMERA_FACE.equals(CAMERA_BACK)){
+                flipOrientation = 0;
+            }
             switch (flipOrientation){
                 case 90:
                     Matrix matrix = new Matrix();
@@ -566,7 +578,6 @@ public class MainActivity extends AppCompatActivity {
                     Matrix matrix270 = new Matrix();
                     matrix270.postRotate(-270);
                     decodeImg = Bitmap.createBitmap(decodeImg,0,0,decodeImg.getWidth(),decodeImg.getHeight(),matrix270,true);
-
                     break;
             }
 
@@ -582,7 +593,7 @@ public class MainActivity extends AppCompatActivity {
                 flippedImg = Bitmap.createBitmap(decodeImg,0,0,decodeImg.getWidth(),decodeImg.getHeight(),matrixMirror,true);
                 flippedImg.compress(Bitmap.CompressFormat.JPEG, 15, bytes);
             }else{
-                //decodeImg.compress(Bitmap.CompressFormat.JPEG, 15, bytes);
+                decodeImg.compress(Bitmap.CompressFormat.JPEG, 15, bytes);
             }
 
             File ExternalStorageDirectory = Environment.getExternalStorageDirectory();
@@ -647,8 +658,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
     /******************CAMERA2 END*****************/
 
     public void LogOut(View v){
@@ -665,6 +674,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
+        networkRule();
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(textureView.isAvailable()){
@@ -726,28 +736,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-
-
-    /*
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        // Checks the orientation of the screen
-        Toast.makeText(this, "something happened", Toast.LENGTH_SHORT).show();
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            //LANDSCAPE
-            Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
-           // fixOrientation(mPreviewSize.getWidth(),mPreviewSize.getHeight());
-
-
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
-            //PORTRAIT
-            Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
-           // Intent restart = new Intent(MainActivity.this, MainActivity.class);
-            //startActivity(restart);
-        }
-    }*/
     ImageView squirrelImg;
     Button btnSwapCam;
     Button btnLogout;
@@ -755,7 +743,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         OrientationEventListener mOrientationListener = new OrientationEventListener(
                 getApplicationContext()) {
             @Override
@@ -867,8 +854,6 @@ public class MainActivity extends AppCompatActivity {
             mOrientationListener.enable();
         }
 
-
-
         setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -877,6 +862,9 @@ public class MainActivity extends AppCompatActivity {
         //Toolbar
         Toolbar toolbar = findViewById(R.id.app_bar);
         setSupportActionBar(toolbar);
+
+
+        Log.d("DOIHAVEINTERNET", "onCreate: " + isNetworkAvailable());
 
         //FireBase
         FirebaseApp.initializeApp(this);
@@ -923,11 +911,8 @@ public class MainActivity extends AppCompatActivity {
         //prepare the frame layout
 
         textureView = findViewById(R.id.textureView);
-
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
-
             /*******************NEW CAMERA *****************/
-
             //have to use this as the framlayout w and h waere being queried before the layout was drawn:
             //https://stackoverflow.com/a/21926714
             ViewTreeObserver vto = textureView.getViewTreeObserver();
@@ -964,7 +949,27 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //CHECK IF THERE IS AN INTERNET CONNECTION
+    //https://stackoverflow.com/questions/4238921/detect-whether-there-is-an-internet-connection-available-on-android
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+    private void networkRule(){
+        if(!isNetworkAvailable()){
+            new AlertDialog.Builder(this)
+                    .setTitle("Internet Needed")
+                    .setMessage("Please connect to the internet before using this app!")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
 
+                        }
+                    }).create().show();
+        }
+    }
 
     @Override
     protected void onResume(){
@@ -1045,17 +1050,24 @@ public class MainActivity extends AppCompatActivity {
 
         //ARRAY OF PERMISSIONS
         String[] permissions = {
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.CAMERA,
-            Manifest.permission.READ_PHONE_STATE
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA,
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.FOREGROUND_SERVICE,
+                Manifest.permission.INTERNET,
+                Manifest.permission.ACCESS_NETWORK_STATE
         };
 
         //ARE THESE PERMISSIONS GIVEN
         if(ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[0]) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[1]) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[2]) == PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[3]) == PackageManager.PERMISSION_GRANTED)
+                ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[3]) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[4]) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[5]) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[6]) == PackageManager.PERMISSION_GRANTED
+        )
         {
             //IF THEY ARE GRANTED THEN:
 
@@ -1065,6 +1077,4 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-    //then the deivice orientation is turned: https://stackoverflow.com/questions/5726657/how-to-detect-orientation-change-in-layout-in-android
-
 }

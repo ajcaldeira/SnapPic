@@ -1,12 +1,17 @@
 package com.example.snappic;
 
 import android.Manifest;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Camera;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
@@ -43,6 +48,7 @@ public class LoginScreen extends AppCompatActivity {
     EditText txtVerCode;
     Button btnGetNumber;
     Button btnWrongNumber;
+    Button btnReconnect;
     TextView txtError;
     TextView txtWrongNumber;
     ProgressBar progressBar;
@@ -54,9 +60,8 @@ public class LoginScreen extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        handlePermissions();
         setContentView(R.layout.activity_login_screen);
-
+        handlePermissions();
         txtPhoneNumber = findViewById(R.id.txtPhoneNumber);
         btnGetNumber = findViewById(R.id.btnGetNumber);
         txtError = findViewById(R.id.txtError);
@@ -64,10 +69,20 @@ public class LoginScreen extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         btnWrongNumber = findViewById(R.id.btnWrongNumber);
         txtWrongNumber = findViewById(R.id.txtWrongNumber);
-
+        btnReconnect = findViewById(R.id.btnReconnect);
+        networkRule();
+        btnReconnect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                networkRule();
+            }
+        });
         btnGetNumber.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+                if(!isNetworkAvailable()){
+                    networkRule();
+                }else{
                 String rawNumber = getPhoneNumber();
                 rawNumber = rawNumber.replace("00","+");
                 txtPhoneNumber.setText(rawNumber);
@@ -102,6 +117,7 @@ public class LoginScreen extends AppCompatActivity {
                         });
 
             }
+            }
         });
         btnWrongNumber.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -133,8 +149,40 @@ public class LoginScreen extends AppCompatActivity {
                         });
             }
         });
-    }
 
+    }
+    private void networkRule(){
+        btnWrongNumber = findViewById(R.id.btnWrongNumber);
+        btnGetNumber = findViewById(R.id.btnGetNumber);
+        btnReconnect = findViewById(R.id.btnReconnect);
+        btnWrongNumber.setEnabled(false);
+        btnGetNumber.setEnabled(false);
+        btnReconnect.setVisibility(View.VISIBLE);
+        btnReconnect.setEnabled(true);
+        if(!isNetworkAvailable()){
+            new AlertDialog.Builder(this)
+                    .setTitle("Internet Needed")
+                    .setMessage("Please connect to the internet before using this app!")
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    }).create().show();
+            //this.finish();
+            //System.exit(0);
+        }else{
+            btnReconnect.setVisibility(View.INVISIBLE);
+            btnWrongNumber.setEnabled(true);
+            btnGetNumber.setEnabled(true);
+        }
+    }
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
     public String getPhoneNumber(){
         String autoPhoneNumber;
         if (ContextCompat.checkSelfPermission(LoginScreen.this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED){
@@ -151,6 +199,7 @@ public class LoginScreen extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(currentUser != null) {
             Intent mainScreen = new Intent(LoginScreen.this, MainActivity.class);
@@ -231,37 +280,74 @@ public class LoginScreen extends AppCompatActivity {
         startActivity(mainScreen);
     }
 
-
+    int deniedCount = 0;
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
         handlePermissions();
     }
 
     private void handlePermissions(){
 
         //ARRAY OF PERMISSIONS
-        String[] permissions = {
+        final String[] permissions = {
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.CAMERA,
                 Manifest.permission.READ_PHONE_STATE,
                 Manifest.permission.FOREGROUND_SERVICE,
-                Manifest.permission.INTERNET
+                Manifest.permission.INTERNET,
+                Manifest.permission.ACCESS_NETWORK_STATE
         };
 
+        Log.d("DENIEDCOUNTER", "handlePermissions0: " + deniedCount);
         //ARE THESE PERMISSIONS GIVEN
         if(ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[0]) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[1]) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[2]) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[3]) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[4]) == PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[5]) == PackageManager.PERMISSION_GRANTED)
+                ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[5]) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[6]) == PackageManager.PERMISSION_GRANTED
+        )
         {
             //IF THEY ARE GRANTED THEN:
+
         }else{
             //IF NOT GRANTED, ASK FOR THEM:
-            ActivityCompat.requestPermissions(LoginScreen.this,permissions,ALL_PERMISSION_CODE);
+            if(deniedCount == 1){
+                Log.d("DENIEDCOUNTER", "handlePermissions2: " + deniedCount);
+                new AlertDialog.Builder(this)
+                        .setTitle("Permissions Needed")
+                        .setMessage("You need to accept all permissions to use the app. If they are denied again the app will close :(")
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                ActivityCompat.requestPermissions(LoginScreen.this,permissions,ALL_PERMISSION_CODE);
+                            }
+                        })
+                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                ActivityCompat.requestPermissions(LoginScreen.this,permissions,ALL_PERMISSION_CODE);
+                            }
+                        }).create().show();
+                deniedCount++;
+
+            }else if (deniedCount == 2){
+                Log.d("DENIEDCOUNTER", "handlePermissions3: " + deniedCount);
+                //exit
+                this.finish();
+                System.exit(0);
+            }else{
+                ActivityCompat.requestPermissions(LoginScreen.this,permissions,ALL_PERMISSION_CODE);
+                deniedCount = 1;
+
+                Log.d("DENIEDCOUNTER", "handlePermissions1: " + deniedCount);
+            }
+
         }
+
 
     }
 

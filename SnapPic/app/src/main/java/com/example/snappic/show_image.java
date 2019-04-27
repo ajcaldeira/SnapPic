@@ -1,10 +1,13 @@
 package com.example.snappic;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Environment;
 import android.support.annotation.NonNull;
@@ -87,7 +90,9 @@ public class show_image extends AppCompatActivity {
                     animRotateLogout.setFillAfter(true);
                     animSetLogout.addAnimation(animRotateLogout);
                     btnStory.startAnimation(animRotateLogout);
-
+                    if(!mtoSendUID.equals("")){
+                        btnSendImage.startAnimation(animRotateLogout);
+                    }
                 } else if ((orientation > 65 && orientation < 135)) {
                     AnimationSet animSet2;
                     animSet2 = new AnimationSet(true);
@@ -101,6 +106,9 @@ public class show_image extends AppCompatActivity {
                     animRotate270.setFillAfter(true);
                     animSet2.addAnimation(animRotate270);
                     btnStory.startAnimation(animSet2);
+                    if(!mtoSendUID.equals("")){
+                        btnSendImage.startAnimation(animSet2);
+                    }
 
                 }else if ((orientation > 0 && orientation < 310 && orientation != 65 && orientation != 290 && orientation != 271)) {
                     AnimationSet animSet2;
@@ -115,7 +123,9 @@ public class show_image extends AppCompatActivity {
                     animRotate270.setFillAfter(true);
                     animSet2.addAnimation(animRotate270);
                     btnStory.startAnimation(animSet2);
-
+                    if(!mtoSendUID.equals("")){
+                        btnSendImage.startAnimation(animSet2);
+                    }
                 }
             }
         };
@@ -227,61 +237,67 @@ public class show_image extends AppCompatActivity {
         MimeTypeMap mime = MimeTypeMap.getSingleton();
         return mime.getExtensionFromMimeType(cR.getType(uri));
     }
-
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
     public void uploadFileStory(){
         //where to save in FireBase storage storage
-        Date date = new Date();
-        mStorageRef = FirebaseStorage.getInstance().getReference("Story").child(mAuth.getUid());
-        //WHERE TO SAVE IN DB
-        mdbRef = FirebaseDatabase.getInstance().getReference("Users");
-        dbRetrieve = mdbRef.child(uid);
-        dbRetrieveIn = dbRetrieve.child("Story");
-        dbStoryDate = dbRetrieveIn.child(dateFormat.format(date));
-        if(mImageUri != null){
-            final StorageReference fileReference = mStorageRef.child(System.currentTimeMillis() + uid + ".jpg" /*+ getFileExtensions(mImageUri)*/);
-            mUploadTask = fileReference.putFile(mImageUri)
-                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            //reset progress bar and add delay or you will never see it. 12:40 in ref video above
-                            //get download url
-                            fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri uri) {
-
-
-
-                                    //check if there is already a story
-                                    Upload upload = new Upload(mFileName.trim(),
-                                            uri.toString());
-                                    //creates new db entry with unique id
-                                    dbStoryDate.removeValue();
-                                    String uploadID = dbStoryDate.push().getKey();
-                                    dbStoryDate.child(uploadID).setValue(upload);
-                                    dbStoryDate.child(uploadID).child("timestamp").setValue(""+System.currentTimeMillis());
-                                    Toast.makeText(show_image.this, "Set As Story!",Toast.LENGTH_SHORT).show();
-                                    Intent mainAct = new Intent(show_image.this,MainActivity.class);
-                                    startActivity(mainAct);
-                                    finish();
-                                }
-                            });
-                            //Toast.makeText(show_image.this, taskSnapshot.getMetadata().getReference().getDownloadUrl().toString(),Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(show_image.this,e.getMessage(),Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                            //can put progress bar here
-                        }
-                    });
+        if(!isNetworkAvailable()){
+            Toast.makeText(this, "No Network Connection!", Toast.LENGTH_SHORT).show();
         }else{
-            Toast.makeText(this,"Oops! Something went wrong",Toast.LENGTH_SHORT).show();
+            Date date = new Date();
+            mStorageRef = FirebaseStorage.getInstance().getReference("Story").child(mAuth.getUid());
+            //WHERE TO SAVE IN DB
+            mdbRef = FirebaseDatabase.getInstance().getReference("Users");
+            dbRetrieve = mdbRef.child(uid);
+            dbRetrieveIn = dbRetrieve.child("Story");
+            dbStoryDate = dbRetrieveIn.child(dateFormat.format(date));
+            if(mImageUri != null){
+                final StorageReference fileReference = mStorageRef.child(System.currentTimeMillis() + uid + ".jpg" /*+ getFileExtensions(mImageUri)*/);
+                mUploadTask = fileReference.putFile(mImageUri)
+                        .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                //reset progress bar and add delay or you will never see it. 12:40 in ref video above
+                                //get download url
+                                fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                    @Override
+                                    public void onSuccess(Uri uri) {
+                                        //check if there is already a story
+                                        Upload upload = new Upload(mFileName.trim(),
+                                                uri.toString());
+                                        //creates new db entry with unique id
+                                        dbStoryDate.removeValue();
+                                        String uploadID = dbStoryDate.push().getKey();
+                                        dbStoryDate.child(uploadID).setValue(upload);
+                                        dbStoryDate.child(uploadID).child("timestamp").setValue(""+System.currentTimeMillis());
+                                        Toast.makeText(show_image.this, "Set As Story!",Toast.LENGTH_SHORT).show();
+                                        Intent mainAct = new Intent(show_image.this,MainActivity.class);
+                                        startActivity(mainAct);
+                                        finish();
+                                    }
+                                });
+                                //Toast.makeText(show_image.this, taskSnapshot.getMetadata().getReference().getDownloadUrl().toString(),Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(show_image.this,e.getMessage(),Toast.LENGTH_SHORT).show();
+                            }
+                        })
+                        .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                //can put progress bar here
+                            }
+                        });
+            }else{
+                Toast.makeText(this,"Oops! Something went wrong",Toast.LENGTH_SHORT).show();
+            }
         }
     }
     @Override
