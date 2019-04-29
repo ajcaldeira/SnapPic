@@ -30,11 +30,12 @@ public class ContactUIDListAdapter extends ArrayAdapter<ContactUIDListFill> {
         //create contact object with the info
         UIDList uidList = new UIDList(uid);
 
+        //sets the xml layout to the view
         LayoutInflater inflater = LayoutInflater.from(mContext);
         convertView = inflater.inflate(mResource, parent, false);
 
+        //name of person
         TextView txtStoryName = convertView.findViewById(R.id.txtStoryName);
-
         txtStoryName.setText(uid);
 
         return convertView;

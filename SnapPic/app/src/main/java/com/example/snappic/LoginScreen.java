@@ -158,6 +158,7 @@ public class LoginScreen extends AppCompatActivity {
         this.finish();
         System.exit(0);
     }
+    //network connection check
     private void networkRule(){
         btnWrongNumber = findViewById(R.id.btnWrongNumber);
         btnGetNumber = findViewById(R.id.btnGetNumber);
@@ -176,8 +177,6 @@ public class LoginScreen extends AppCompatActivity {
 
                         }
                     }).create().show();
-            //this.finish();
-            //System.exit(0);
         }else{
             btnReconnect.setVisibility(View.INVISIBLE);
             btnWrongNumber.setEnabled(true);
@@ -190,6 +189,7 @@ public class LoginScreen extends AppCompatActivity {
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
+    //use telephony manager to get the phone number
     public String getPhoneNumber(){
         String autoPhoneNumber;
         if (ContextCompat.checkSelfPermission(LoginScreen.this, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED){
@@ -215,6 +215,7 @@ public class LoginScreen extends AppCompatActivity {
 
     }
 
+    //firebase to sign the user in
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
 
         mAuth.signInWithCredential(credential)
@@ -224,7 +225,7 @@ public class LoginScreen extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             // User successfully verified
 
-                            CheckUserExistsInDatabase();
+                            CheckUserExistsInDatabase();//make sure the user is registered
 
                         } else {
                             // Sign in failed, display a message and update the UI
@@ -239,6 +240,7 @@ public class LoginScreen extends AppCompatActivity {
                 });
     }
 
+    //checks user has an account
     public void CheckUserExistsInDatabase(){
         //CHECK IF USER IS REGISTERED IN DB
         final int[] userInDB = {0};
@@ -260,6 +262,7 @@ public class LoginScreen extends AppCompatActivity {
                         txtError.setText("Welcome Back " + users.name);
                         break;
                     }else{
+                        //take the user to a register screen if they do not
                         GoToRegScreen();
                         finish();
                     }

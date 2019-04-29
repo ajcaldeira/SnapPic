@@ -258,6 +258,7 @@ public class MainActivity extends AppCompatActivity {
                 //so we may not get the exact resolution, but we get the closest match
                 mPreviewSize = pickBestSize(map.getOutputSizes(SurfaceTexture.class), rotatedWidth, rotaredHeight);
                 //HANDLE 2K AND 4K
+                Log.d("RESOLUTIONcam", "SetUpCamera: " + rotatedWidth +rotaredHeight );
                 mImageSize = pickBestSize(map.getOutputSizes(ImageFormat.JPEG), rotatedWidth, rotaredHeight);
                 mImageReader = ImageReader.newInstance(mImageSize.getWidth(),mImageSize.getHeight(), ImageFormat.JPEG,1);
                 mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler);
@@ -266,8 +267,6 @@ public class MainActivity extends AppCompatActivity {
                 }else {
                     mCameraID = cameraID;
                 }
-                //CAMERA_SWAP = false;
-
                 return;
             }
         } catch (CameraAccessException e) {
@@ -917,8 +916,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                     int width  = textureView.getMeasuredWidth();
                     int height = textureView.getMeasuredHeight();
-                    testWidth = width;
-                    testHeight = height;
+                    testWidth = width ;
+                    testHeight = height ;
                     SetUpCamera(testWidth,testHeight);
                     //make sure orientation is correct
                     DEVICE_ROTATION = getWindowManager().getDefaultDisplay().getRotation();
@@ -929,8 +928,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d("ONCREATEDEVICEROTATION", "onCreate: " + DEVICE_ROTATION);
                         Log.d("ONCREATEDEVICEROTATION", "width: " + testWidth);
                         Log.d("ONCREATEDEVICEROTATION", "height: " + testHeight);
-                        fixOrientation(testWidth,testHeight);
-                        //fixOrientation(mPreviewSize.getWidth(),mPreviewSize.getHeight());
+
                     }
                 }
             });

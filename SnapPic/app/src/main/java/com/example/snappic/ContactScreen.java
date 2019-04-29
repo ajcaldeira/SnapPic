@@ -95,7 +95,7 @@ public class ContactScreen extends AppCompatActivity  {
     //recycler view
     private RecyclerView newContRecycler;
     private RecyclerView.Adapter newContRecyclerAdapter;//provides only as many items as we currently need
-    private RecyclerView.LayoutManager newContRecyclerLayoutManager;//provides only as many items as we currently need
+    private RecyclerView.LayoutManager newContRecyclerLayoutManager;//provides only as many items as we currently need - can be changed for any style view
     final ArrayList<New_contact_item> New_contact_items = new ArrayList<>();
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -183,6 +183,7 @@ public class ContactScreen extends AppCompatActivity  {
                 txtSearchNumber = myContactDialog.findViewById(R.id.txtSearchNumber);
                 btnAddContact = myContactDialog.findViewById(R.id.btnAddContact);
                 myContactDialog.show();
+
             }
         });
 
@@ -224,7 +225,7 @@ public class ContactScreen extends AppCompatActivity  {
                                // startActivity(getIntent());
                                 break;
                             case 8:
-                                //sl;ide right to accept a contact request
+                                //slide right to accept a contact request
                                 USERS_TO_ADD = 1;
                                 DELETING_JUST_ADDED_CONT_LIST = true;
                                 //accept contact request
@@ -274,7 +275,7 @@ public class ContactScreen extends AppCompatActivity  {
     }
 
     //get the current user's contact requests from firebase
-    public void getContactRequest(){
+    public void getContactRequest(){ //this is run every time  a change is made to the contacts
         New_contact_items.clear();//make sure the array is empty first so there are no doubles
         dbRef = FirebaseDatabase.getInstance().getReference("Users").child(mAuth.getUid()).child("ReceivedContactRequests");
         dbRef.addValueEventListener(new ValueEventListener() {
@@ -295,7 +296,7 @@ public class ContactScreen extends AppCompatActivity  {
                         }
 
 
-                        String uid = ds.getKey();
+                        String uid = ds.getKey();//get key node
                         if(New_contact_items.size() == ARRAY_SIZE){//make sure the array does not get extra contacts added as firebase is asynchronous
                             break;
                         }else{
@@ -388,6 +389,8 @@ public class ContactScreen extends AppCompatActivity  {
         });
 
     }
+
+    //this is run when you accept a contact request and we add me to their list and them to my list
     public void addUserToContacts(final String currentUID, final String currentName, final String currentNumber){
         DELETING_JUST_ADDED = true;
         dbRefAdd = FirebaseDatabase.getInstance().getReference("Users");
@@ -437,7 +440,8 @@ public class ContactScreen extends AppCompatActivity  {
         startService(serviceIntent);
         changeNumberOfContactRequestsUI();
         SharedPreferences contactSharedPref = getSharedPreferences(SHARED_PREFS,MODE_PRIVATE);
-        NO_CONTACTS = contactSharedPref.getInt("noContacts",0);
+        NO_CONTACTS = contactSharedPref.getInt("noContacts",0); //pull the number of contacts form shared prefs - used later
+        //check if were connected to a network
         if(!isNetworkAvailable()){
             progressBarContact.setVisibility(View.INVISIBLE);
             new AlertDialog.Builder(this)
@@ -446,7 +450,7 @@ public class ContactScreen extends AppCompatActivity  {
                     .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-
+                            //dont need anything to happen here, its just an alert to the user
                         }
                     }).create().show();
         }
@@ -457,14 +461,17 @@ public class ContactScreen extends AppCompatActivity  {
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
+    //gets the number of contact requests from shared prefs and changes the number on the UI to the current number of requests
+    //shared prefs updates in the fetch intent service
     public void changeNumberOfContactRequestsUI(){
         SharedPreferences contactSharedPrefReq = getSharedPreferences("ContactREQ", MODE_PRIVATE);
         int currentREQ = contactSharedPrefReq.getInt("numOfContactsRequests",0);
         ARRAY_SIZE = currentREQ;
         txtNewContacts.setText(String.valueOf(ARRAY_SIZE));
-        //Log.d("SPNOREQUESTS", "changeNumberOfContactRequestsUI: DETECT " + currentREQ);
+
     }
 
+    //this is ran when the user adds a new contact
     public void AddNewContact(View v){
         //GET THE USER'S CONTACTS
         DELETING_JUST_ADDED = true;
@@ -481,12 +488,14 @@ public class ContactScreen extends AppCompatActivity  {
                     if(searchedNumber.equals(currentNo)){
                         //check if the user already sent a contact request
                         if(ds.child("ReceivedContactRequests").child(mAuth.getUid()).hasChildren()){
-                            Log.d("ALREADYIN", "Already in db");
+
                             Toast.makeText(ContactScreen.this, "Already Sent!", Toast.LENGTH_SHORT).show();
                         }else{
+                            //get the users name and number of who sent the request - in all cases this will be the user currently logged in, hence mAuth.getUid()
                             String sentName = dataSnapshot.child(mAuth.getUid()).child("name").getValue().toString();
                             String sentNumber = dataSnapshot.child(mAuth.getUid()).child("number").getValue().toString();
 
+                            //set the values gathered above into the received requests of the user we sent the request to
                             dbRef.child(uid).child("ReceivedContactRequests").child(mAuth.getUid()).child("Name").setValue(sentName);
                             dbRef.child(uid).child("ReceivedContactRequests").child(mAuth.getUid()).child("Number").setValue(sentNumber);
 
@@ -501,9 +510,11 @@ public class ContactScreen extends AppCompatActivity  {
 
                 }
 
+                //run the service to make sure everythign is up to date
                 Intent serviceIntent = new Intent(ContactScreen.this, ContactFetchIntentService.class);
                 GetUserContacts(mAuth.getUid(),false);
                 startService(serviceIntent);
+                //make sure the number of requests is correct
                 changeNumberOfContactRequestsUI();
                 getContactRequest();
 
@@ -511,11 +522,13 @@ public class ContactScreen extends AppCompatActivity  {
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {}
         });
+        //again make sure service is running, sometimes the other may not run properly due to firebase asynchronous
         Intent serviceIntent = new Intent(ContactScreen.this, ContactFetchIntentService.class);
         startService(serviceIntent);
 
     }
 
+    //viewing messages that have been sent from another user
     public void viewMessages(View v){
         DELETING_FLAG = false;//set it to false on click so it shows the messages
         //the variable above has to be here because of firebase's asynchronous annoyance
@@ -524,7 +537,7 @@ public class ContactScreen extends AppCompatActivity  {
         myDialog.hide();
         CURRENT_MESSAGE = 0;
         CURRENT_MESSAGE_USERID = "";
-        Log.d("VIEWMYMESSAGES", "viewMessages: dwdwdwwd");
+
         newMessagesArrayList.clear();
         newMessagesIDArrayList.clear();
         newMessagesFileName.clear();
@@ -547,23 +560,19 @@ public class ContactScreen extends AppCompatActivity  {
                         int counter = 0;
                         for(DataSnapshot userSnapshot: dataSnapshot.getChildren()){
                             //GET EACH MESSAGE FOR THE SPECIFIC USER
-                            //Log.d("VIEWMYMESSAGES", userSnapshot.child("mImageUrl").getValue().toString());
                             String imageURL;
                             imageURL = userSnapshot.child("mImageUrl").getValue().toString().trim();
                             String imgName;
                             imgName = userSnapshot.child("mName").getValue().toString().trim();
-                            //Log.d("VIEWMYMESSAGES", "onDataChange: " + imageURL);
                             newMessagesArrayList.add(imageURL.trim());
                             newMessagesIDArrayList.add(userSnapshot.getKey());
                             newMessagesFileName.add(imgName.trim());
-                            Log.d("VIEWMYMESSAGES", "im running for no real reason -_-");
-                            //newMessagesIDArrayList.add();
                             counter++;
                         }
 
                         //make sure the array isnt empty and a flag so firebase doesnt delete it
                         if(newMessagesArrayList.size() != 0 && !DELETING_FLAG){
-                            Log.d("VIEWMYMESSAGES", "I AM GONNA SHOW THE IMAGES WOO");
+
                             viewMessageDialog.setContentView(R.layout.show_message);
                             imgShowMessage = viewMessageDialog.findViewById(R.id.imgShowMessage);
                             //get the first letter of the file name to decide if we rotate it.
@@ -580,7 +589,7 @@ public class ContactScreen extends AppCompatActivity  {
                             CURRENT_MESSAGE = 0;
                             viewMessageDialog.show();
                         }else{
-                            Log.d("VIEWMYMESSAGES", "I GONNA FINISH NOW :D");
+                            //when all the messages have been viewed and none are left
                             newMessagesArrayList.clear();
                             newMessagesIDArrayList.clear();
                             newMessagesFileName.clear();
@@ -603,9 +612,11 @@ public class ContactScreen extends AppCompatActivity  {
 
     }
 
+    //x button on the pop up
     public void closePopUp(View v){
         myDialog.hide();
     }
+    //send snap button
     public void sendSnap(View v){
         //get the first shared prefs with all contacts
         String SHARED_PREFS = getSharedPrefContactVar();
@@ -619,7 +630,7 @@ public class ContactScreen extends AppCompatActivity  {
             String spName = "cUID" + String.valueOf(loop_Incrementer);
             String uid = contactSharedPref.getString(spName,"");
             String userNumber = contactSharedPrefsSpecific.getString(uid,"");
-            if(userNumber.equals(txtPopPhoneNo.getText())){
+            if(userNumber.equals(txtPopPhoneNo.getText())){//so we dont send to the first user in contact list
                 //if the number the user tapped on is equal to the current shared pref then end the loop
                 //and continue to the main screen
                 Intent sendSnapMain = new Intent(ContactScreen.this, MainActivity.class);
@@ -638,6 +649,7 @@ public class ContactScreen extends AppCompatActivity  {
     }
     @Override
     public void onBackPressed() {
+        //always go back to main activity when back is pressed
         moveTaskToBack(true);
         Intent mainActivity = new Intent(ContactScreen.this,MainActivity.class);
         startActivity(mainActivity);
@@ -659,7 +671,6 @@ public class ContactScreen extends AppCompatActivity  {
     public String LoadSharedPrefs(String spName,String spKey){
         SharedPreferences contactSharedPref = getSharedPreferences(spName, MODE_PRIVATE);
         String currentSP = contactSharedPref.getString(spKey,"");
-
         return currentSP;
     }
     public void loadSharedPrefNoContacts(){
@@ -697,7 +708,7 @@ public class ContactScreen extends AppCompatActivity  {
                         Log.d("CUIDMESSAGES", String.valueOf(noMessages));
 
                         //check if this current contact has send any messages to the current logged in user (me)
-                                                //create contact object and pass the data into it
+                        //create contact instance and pass the data into it
                         Contacts contact = new Contacts(dbName, dbNumber, noMessages);
 
                         String spName = "cUID" + String.valueOf(counter);
@@ -707,11 +718,12 @@ public class ContactScreen extends AppCompatActivity  {
                         counter++;
                     }
                 }
+                //this is incase the method is called from another class, make sure it does not do anything to the ui
                 if(!isClassCall){
                     progressBarContact.setVisibility(View.INVISIBLE);
                     ContactsListAdapter adapter = new ContactsListAdapter(ContactScreen.this, R.layout.custom_layout, arrayList);
                     listContacts.setAdapter(adapter);
-                    Log.d("ARRAYLISTSIZE", String.valueOf(arrayList.size()));
+
                 }
             }
 
@@ -724,22 +736,22 @@ public class ContactScreen extends AppCompatActivity  {
         });
 
     }
-    //delete the messages when the =last message is clicked on
+    //delete the messages when the last message is clicked on
     public void testOnClick(View v){
 
         int sizeOfArray = newMessagesArrayList.size();
         CURRENT_MESSAGE++;
-        Log.d("VIEWMYMESSAGES", "currentmessage: " + CURRENT_MESSAGE);
-        Log.d("VIEWMYMESSAGES", "arraysize: " + sizeOfArray);
+
+        //check if its the last message
         if(CURRENT_MESSAGE >= sizeOfArray){
-            DELETING_FLAG = true;
-            Log.d("VIEWMYMESSAGES", "testOnClick: Ending");
+            DELETING_FLAG = true; //allow it to delete
             CURRENT_MESSAGE = 0;
             viewMessageDialog.hide();
             for(int i = 0; i < sizeOfArray; i ++){
-                deleteMessages(newMessagesIDArrayList.get(i));
+                deleteMessages(newMessagesIDArrayList.get(i));//delete all messages form the db
             }
         }else{
+            //if the messages are still begin displayed, then show them in the imgview
             viewMessageDialog.setContentView(R.layout.show_message);
             imgShowMessage = viewMessageDialog.findViewById(R.id.imgShowMessage);
             Picasso.get().load(newMessagesArrayList.get(CURRENT_MESSAGE)).into(imgShowMessage);

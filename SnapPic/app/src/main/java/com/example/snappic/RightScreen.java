@@ -191,7 +191,6 @@ public class RightScreen extends AppCompatActivity {
 
     }
 
-
     public void GetStory(String spID, final String spUsersName){
         Date date = new Date();
         String myUID = spID;
