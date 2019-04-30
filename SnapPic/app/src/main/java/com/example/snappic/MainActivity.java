@@ -455,7 +455,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onConfigureFailed(CameraCaptureSession session) {
-                    //if something isnt supported, ususally because of an old camera phone
+                    //if something isnt supported, ususally because of an old camera phone or unsupported sizes //future improvement
                     Toast.makeText(MainActivity.this, "Failed", Toast.LENGTH_SHORT).show();
 
                 }
