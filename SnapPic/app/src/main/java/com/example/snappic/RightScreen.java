@@ -1,5 +1,5 @@
 package com.example.snappic;
-
+//CLASS FOR THE RIGHT "STORY" SCREEN
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -149,12 +149,15 @@ public class RightScreen extends AppCompatActivity {
         });
 
     }
+    //network check
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
+
+    //override the back button press
     @Override
     public void onBackPressed() {
         moveTaskToBack(true);
@@ -162,7 +165,10 @@ public class RightScreen extends AppCompatActivity {
         startActivity(mainActivity);
     }
 
+
+    //get a list of the current users contacts' UIDs
     public void getUIDContactList(){
+        //get the shared prefs name from the contact screen
         ContactScreen contactScreen = new ContactScreen();
 
         String SHARED_PREFS = contactScreen.getSharedPrefContactVar();
@@ -177,7 +183,7 @@ public class RightScreen extends AppCompatActivity {
             String spName = "cUID" + String.valueOf(loop_Incrementer);
             String currentSP = contactSharedPref.getString(spName,"");
             String spUsersName = contactSharedPref.getString(currentSP,"");
-            GetStory(currentSP,spUsersName);
+            GetStory(currentSP,spUsersName);//calls get story which fetches the story for the current user that its looking at in shared prefs
             loop_Incrementer++;
         }
         if(loop_Incrementer == 0){
@@ -191,6 +197,7 @@ public class RightScreen extends AppCompatActivity {
 
     }
 
+    //get the story using the specified uid passed in from the shared prefs loop
     public void GetStory(String spID, final String spUsersName){
         Date date = new Date();
         String myUID = spID;
@@ -205,6 +212,11 @@ public class RightScreen extends AppCompatActivity {
                     String storyName = spUsersName;
                     String imgUrl = retrieveStory.mImageUrl;
                     String imgName = retrieveStory.mName;
+
+                    //this needs to be checked so its not null, avoids crashes
+                    if(storyTimeStamp == null){
+                        continue;
+                    }
 
                     long epoch = Long.parseLong(storyTimeStamp);
                     Date dateEp = new Date(epoch);

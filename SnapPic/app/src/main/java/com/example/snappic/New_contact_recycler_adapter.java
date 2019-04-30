@@ -28,6 +28,7 @@ private ArrayList<New_contact_item> mContactArrayList;
     @NonNull
     @Override
     public contViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+        //inflater to put the style into the view holder
         View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.contact_recyclerview_item,viewGroup,false);
         contViewHolder contViewHolder = new contViewHolder(v);
         return contViewHolder;
@@ -35,8 +36,10 @@ private ArrayList<New_contact_item> mContactArrayList;
 
     @Override
     public void onBindViewHolder(@NonNull contViewHolder contViewHolder, int position) {
+        //make a new contact item and write the data in the array into the instance
         New_contact_item currentItem = mContactArrayList.get(position);
 
+        //change the textboxe of the viewholder to the values in the class instance
         contViewHolder.txtName.setText(currentItem.getNewContactName());
         contViewHolder.txtNumber.setText(currentItem.getNewContactNumber());
     }

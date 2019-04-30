@@ -230,13 +230,6 @@ public class show_image extends AppCompatActivity {
         });
     }
 
-
-    private String getFileExtensions(Uri uri){
-        //REFERENCE: https://www.youtube.com/watch?v=lPfQN-Sfnjw 6:28
-        ContentResolver cR = getContentResolver();
-        MimeTypeMap mime = MimeTypeMap.getSingleton();
-        return mime.getExtensionFromMimeType(cR.getType(uri));
-    }
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -256,12 +249,12 @@ public class show_image extends AppCompatActivity {
             dbRetrieveIn = dbRetrieve.child("Story");
             dbStoryDate = dbRetrieveIn.child(dateFormat.format(date));
             if(mImageUri != null){
-                final StorageReference fileReference = mStorageRef.child(System.currentTimeMillis() + uid + ".jpg" /*+ getFileExtensions(mImageUri)*/);
+                final StorageReference fileReference = mStorageRef.child(System.currentTimeMillis() + uid + ".jpg");
                 mUploadTask = fileReference.putFile(mImageUri)
                         .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                //reset progress bar and add delay or you will never see it. 12:40 in ref video above
+                                //reset progress bar and add delay or you will never see it. 12:40 iBn ref video above
                                 //get download url
                                 fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                     @Override
@@ -274,11 +267,8 @@ public class show_image extends AppCompatActivity {
                                         String uploadID = dbStoryDate.push().getKey();
                                         dbStoryDate.child(uploadID).setValue(upload);
                                         dbStoryDate.child(uploadID).child("timestamp").setValue(""+System.currentTimeMillis());
-                                        Toast.makeText(show_image.this, "Set As Story!",Toast.LENGTH_SHORT).show();
-                                        Intent mainAct = new Intent(show_image.this,MainActivity.class);
-                                        startActivity(mainAct);
-                                        finish();
                                     }
+
                                 });
                                 //Toast.makeText(show_image.this, taskSnapshot.getMetadata().getReference().getDownloadUrl().toString(),Toast.LENGTH_SHORT).show();
                             }
@@ -286,6 +276,7 @@ public class show_image extends AppCompatActivity {
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
+                                Log.d("FINDSTORYERROR", "onSuccess2:");
                                 Toast.makeText(show_image.this,e.getMessage(),Toast.LENGTH_SHORT).show();
                             }
                         })
@@ -295,7 +286,15 @@ public class show_image extends AppCompatActivity {
                                 //can put progress bar here
                             }
                         });
+
+                //go back to main screen once a story has been set
+                Toast.makeText(show_image.this, "Set As Story!",Toast.LENGTH_SHORT).show();
+                Intent mainAct = new Intent(show_image.this,MainActivity.class);
+                startActivity(mainAct);
+                finish();
+
             }else{
+
                 Toast.makeText(this,"Oops! Something went wrong",Toast.LENGTH_SHORT).show();
             }
         }
@@ -323,21 +322,17 @@ public class show_image extends AppCompatActivity {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                             //reset progress bar and add delay or you will never see it. 12:40 in ref video above
-                            //get download url
+                            //get download url from firebase storage
                             fileReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                                 @Override
                                 public void onSuccess(Uri uri) {
-                                    Log.d("WHATISMYDOWNLOADLINK", "onSuccess: " + uri);
                                     Upload upload = new Upload(mFileName.trim(),
                                             uri.toString());
                                     //creates new db entry with unique id
-                                    //String uploadID = dbStoryDate.push().getKey();
                                     dbStoryDate.setValue(upload);
                                     dbStoryDate.child("timestamp").setValue(timestampSend);
-                                    //Toast.makeText(show_image.this, "Sending..",Toast.LENGTH_SHORT).show();
                                 }
                             });
-                            //Toast.makeText(show_image.this, taskSnapshot.getMetadata().getReference().getDownloadUrl().toString(),Toast.LENGTH_SHORT).show();
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
@@ -352,6 +347,7 @@ public class show_image extends AppCompatActivity {
                             //can put progress bar here
                         }
                     });
+            //getting the token for notifications
             FirebaseInstanceId.getInstance().getInstanceId()
                     .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
                         @Override
@@ -362,8 +358,8 @@ public class show_image extends AppCompatActivity {
                             }
 
 
+                            //call method to get the token to send to
                             String token = getTokenToSendTo(mtoSendUID);//get token to send to
-                            Log.d("TOKENFIREBASESEND", token);
 
                         }
                     });
@@ -372,6 +368,7 @@ public class show_image extends AppCompatActivity {
         }
     }
 
+    //retrieve the token from firebase
     private String getTokenToSendTo(String uidToSend){
 
         dbTokenGetter = FirebaseDatabase.getInstance().getReference("Users").child(uidToSend);
@@ -394,7 +391,7 @@ public class show_image extends AppCompatActivity {
                         TOKEN_IS_SENT = true; //make it true so it doesnt send multiple times
                     }
                 }else{
-                    if(!TOKEN_IS_SENT) {
+                    if(!TOKEN_IS_SENT) {//if there is no token fround for the user, then they have not set up the account yet.
                         TOKEN_TO_SEND_TO = "";
                         Toast.makeText(show_image.this, "This user has not finished setting up their account yet!", Toast.LENGTH_LONG).show();
                         TOKEN_IS_SENT = true; //make it true so it doesnt alert multiple times
@@ -408,7 +405,7 @@ public class show_image extends AppCompatActivity {
 
         });
 
-        dbTokenGetter = null;
+        dbTokenGetter = null;//null so it doesn't run rogue
         return TOKEN_TO_SEND_TO;
     }
 }

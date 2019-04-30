@@ -1,5 +1,5 @@
 package com.example.snappic;
-
+//CLASS TO SAVE THE STORY INFO FROM FIREBASE
 public class RetrieveStory {
 
     public String timestamp,mImageUrl,mName,imgName;

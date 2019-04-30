@@ -1,5 +1,5 @@
 package com.example.snappic;
-
+//CLASS TO RETURN THE IMAGE NAME AND URL
 public class Upload {
 
     private String mName;

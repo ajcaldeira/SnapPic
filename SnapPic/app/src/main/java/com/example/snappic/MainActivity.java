@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.provider.CallLog;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int STATE_WAIT_LOCK = 1;
     private  int mCaptureState = STATE_PREVIEW;//AS WE START ON PREVIEW ALWAYS
     private int mTotalRotation;
-
+    private int deniedCount = 0;
     //defined on main thread, therefore can only work on the main thread
     private Handler ContactHandler = new Handler();
 
@@ -127,10 +128,15 @@ public class MainActivity extends AppCompatActivity {
         Intent mainActivity = new Intent(MainActivity.this,MainActivity.class);
         startActivity(mainActivity);
     }
+
+
+    //run this once the texture is available
+    //TUTORIAL FOLLOWED: https://www.nigeapptuts.com/android-video-app-adding-icons/
+    //https://developer.android.com/reference/android/hardware/camera2/package-summary
     /******************CAMERA2******************/
     private TextureView.SurfaceTextureListener mSurfaceTexListener = new TextureView.SurfaceTextureListener() {
         @SuppressLint("NewApi")
-        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
+        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)//MIN REQUIRED VERSION
         @Override
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
             ConnectToCamera();
@@ -155,6 +161,8 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private CameraDevice mCameraDevice;
+
+    //set what happens using callbacks, if the cam fails, set null
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private CameraDevice.StateCallback mCameraDeviceStateCallback = new CameraDevice.StateCallback() {
         @Override
@@ -165,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onDisconnected(CameraDevice camera) {
             Log.d("onDisconnectedCAM", "onDisconnected: ");
-            //StopBackgroundThread();
+
             if(!IS_CAM_DC){
                 camera.close();
                 mCameraDevice = null;
@@ -202,17 +210,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     protected void onPause() {
-        //closeCamera();
-        //StopBackgroundThread();
+
         super.onPause();
     }
 
+    //MAIN CAMERA SETUP METHOD
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void SetUpCamera(int width, int height) {
         CameraManager camManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         try {
             for (String cameraID : camManager.getCameraIdList()) {
                 CameraCharacteristics cameraCharacteristics = camManager.getCameraCharacteristics(cameraID);
+                //THE CAM IS SET UP EACH TIME IT IS SWAPPED, SO THIS CHECKS IF THE CAM HAS BEEN SWAPPED.
                 if(CAMERA_SWAP){
 
                     if(CAMERA_FACE.equals("1")){
@@ -222,7 +231,7 @@ public class MainActivity extends AppCompatActivity {
                         CAMERA_FACE = "1";
                         cameraCharacteristics = camManager.getCameraCharacteristics(CAMERA_FACE);
                     }
-                }else{
+                }else{//WE ALWAYS WANT THE FRONT CAMERA ON STARTUP
                     //for its first run ONLY so it starts with front cam always
                     if (cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK) {
                         CAMERA_BACK = cameraID;
@@ -234,19 +243,19 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
-                //Toast.makeText(MainActivity.this,debug + CAMERA_FACE,Toast.LENGTH_SHORT).show();
+
                 //gets a list of available resolutions
                 StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
 
                 //Orientation. portrait or not?
                 int deviceOrientation = getWindowManager().getDefaultDisplay().getRotation();
                 int totalRotation = senseorToDeviceRotation(cameraCharacteristics, deviceOrientation);
-                Log.d("ROTATIONTAG", String.valueOf(totalRotation));
+
                 mTotalRotation = totalRotation;
                 //swap rotation if totRotation = 90 or 270. makes bool true else false
                 boolean doSwapRotation = totalRotation == 90 || totalRotation == 270;
-                Log.d("ROTATIONTAG", String.valueOf(doSwapRotation));
-                //getting this width from frame layout (passed when this function is called
+
+                //getting this width from frame layout (passed when this function is called)
                 int rotatedWidth = width;
                 int rotaredHeight = height;
                 if (doSwapRotation) {
@@ -257,11 +266,12 @@ public class MainActivity extends AppCompatActivity {
                 //map.getoutputsize get a list of the preview resolutions and then we pick the optimal with the frameLayouts w and h
                 //so we may not get the exact resolution, but we get the closest match
                 mPreviewSize = pickBestSize(map.getOutputSizes(SurfaceTexture.class), rotatedWidth, rotaredHeight);
-                //HANDLE 2K AND 4K
-                Log.d("RESOLUTIONcam", "SetUpCamera: " + rotatedWidth +rotaredHeight );
+
+                //SELECT THE BEST SIZE OF THE AVAILABLE ONES
                 mImageSize = pickBestSize(map.getOutputSizes(ImageFormat.JPEG), rotatedWidth, rotaredHeight);
                 mImageReader = ImageReader.newInstance(mImageSize.getWidth(),mImageSize.getHeight(), ImageFormat.JPEG,1);
                 mImageReader.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler);
+                //sets the needed varibales for the camera being swapped
                 if(CAMERA_SWAP){
                     mCameraID = CAMERA_FACE;
                 }else {
@@ -272,40 +282,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
-
-    }
-
-    //FIXING ORIENTATION
-    //3 is rotating right
-    //1 is left
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public void fixOrientation(int width, int height){
-        if(mPreviewSize == null || textureView == null){
-            return;
-        }
-        Log.d("ROTATIONTAG2", "w: " + width + " height: " + height);
-        Log.d("ROTATIONTAG2", "mw: " + width + " mheight: " + height);
-        Matrix matrix = new Matrix();
-        int rotation = getWindowManager().getDefaultDisplay().getRotation();
-        RectF textureRectF = new RectF(0,0,width,height);
-        RectF previewRectF = new RectF(0,0,height,width);
-        float centerX = textureRectF.centerX();
-        float centerY = textureRectF.centerY();
-        if(rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270){
-            Log.d("ROTATIONTAG2", "fixOrientation: " + rotation);
-            previewRectF.offset(centerX ,centerY );
-            matrix.setRectToRect(textureRectF,previewRectF, Matrix.ScaleToFit.FILL);
-            float scale = Math.max(1,1);
-            matrix.postScale(scale,scale,centerX,centerY);
-            matrix.postRotate(90 * (rotation - 2), centerX,centerY);
-            if(rotation == Surface.ROTATION_270 ){
-                matrix.postTranslate(Math.round(((float)width - (float)height)),Math.round(((float)height - (float)width) * 0.5f));
-            }else{
-                matrix.postTranslate(-Math.round(((float)width - (float)height)),-Math.round(((float)height - (float)width) * 0.5f));
-            }
-
-        }
-        textureView.setTransform(matrix);
 
     }
 
@@ -334,7 +310,7 @@ public class MainActivity extends AppCompatActivity {
 
     //DEVICE ORIENTATION
     private static SparseIntArray ORIENTATIONS = new SparseIntArray();
-
+    //USES INT ARRAYS AS A KEY TO MAPPING, SIMILAR TO HOW THE PERMISSIONS ARE DONE
     static {
         ORIENTATIONS.append(Surface.ROTATION_0, 0);
         ORIENTATIONS.append(Surface.ROTATION_90, 90);
@@ -382,11 +358,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    //establish a connection ot the camera
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void ConnectToCamera() {
+        //cam manager needed, get the camera service
         CameraManager camManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-        try {
+        try {//make sure we have permissions for cam as its the core of the app
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(MainActivity.this, "Permission Error",Toast.LENGTH_SHORT).show();
                 return;
@@ -395,7 +372,7 @@ public class MainActivity extends AppCompatActivity {
 
         }catch(CameraAccessException e){
             e.printStackTrace();
-            Toast.makeText(MainActivity.this, "no",Toast.LENGTH_SHORT).show();
+
         }
     }
     private CameraCaptureSession mPreviewCapSession;
@@ -450,8 +427,16 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 SetUpCamera(testWidth,testHeight);
+
+            }
+            //failsafe if its still null - avoids crashing
+            if(mCameraDevice == null){
+                Intent intent = new Intent(MainActivity.this,MainActivity.class);
+                startActivity(intent);
+                //finish();
             }
             mCapReqBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+
 
             mCapReqBuilder.addTarget(previewSurface);
             mCameraDevice.createCaptureSession(Arrays.asList(previewSurface,mImageReader.getSurface()), new CameraCaptureSession.StateCallback() {
@@ -461,6 +446,7 @@ public class MainActivity extends AppCompatActivity {
                     //next thing to do is set up our request to session
                     mPreviewCapSession = session;
                     try {
+                        //allows us to preview the camera
                         mPreviewCapSession.setRepeatingRequest(mCapReqBuilder.build(),null,mBackgroundHandler);
                     } catch (CameraAccessException e) {
                         e.printStackTrace();
@@ -469,6 +455,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onConfigureFailed(CameraCaptureSession session) {
+                    //if something isnt supported, ususally because of an old camera phone
                     Toast.makeText(MainActivity.this, "Failed", Toast.LENGTH_SHORT).show();
 
                 }
@@ -481,6 +468,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    //called when the user takes a photo
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void startStillCaptureRequest(){
 
@@ -584,10 +572,10 @@ public class MainActivity extends AppCompatActivity {
             }else{
                 decodeImg.compress(Bitmap.CompressFormat.JPEG, 15, bytes);
             }
-
+            //save the pic to the phone
             File ExternalStorageDirectory = Environment.getExternalStorageDirectory();
             File file = new File(ExternalStorageDirectory +  File.separator + mFileName);
-            //Log.d("WHEREISMYFILESAVING", "run: " + ExternalStorageDirectory + File.separator);
+
             FileOutputStream fileOutputStream = null;
             try {
                 file.createNewFile();
@@ -613,12 +601,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //focus the camera when a pic is taken
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void LockCameraFocus(){
         mCaptureState = STATE_WAIT_LOCK;
         mCapReqBuilder.set(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_START);
 
-        //TurnOnFlash();
+
         try {
             mPreviewCapSession.capture(mCapReqBuilder.build(),mPreviewCapCallback, mBackgroundHandler);
         } catch (CameraAccessException e) {
@@ -626,26 +615,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void TurnOnFlash(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-            try {
-                cameraManager.setTorchMode(CAMERA_BACK,true);
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-    private void TurnOffFlash(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-            try {
-                cameraManager.setTorchMode(CAMERA_BACK,true);
-            } catch (CameraAccessException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+
 
     /******************CAMERA2 END*****************/
 
@@ -663,6 +633,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onStart() {
         super.onStart();
+        deniedCount = 0;
+        handlePermissions();
         networkRule();
         // Check if user is signed in (non-null) and update UI accordingly.
         FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -732,6 +704,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //ROTATIONS AND ANIMATIONS FOR THE ICONS ON THE CAMERA SCREEN
+        //LIMITS ARE DEFINED IN THE IF STATEMENTS AND THE ICONS ARE ROTATED ACCORDINGLY
         OrientationEventListener mOrientationListener = new OrientationEventListener(
                 getApplicationContext()) {
             @Override
@@ -848,10 +822,10 @@ public class MainActivity extends AppCompatActivity {
         //Toolbar
         Toolbar toolbar = findViewById(R.id.app_bar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);//remove app name from toolbar
 
 
-        Log.d("DOIHAVEINTERNET", "onCreate: " + isNetworkAvailable());
+
 
         //FireBase
         FirebaseApp.initializeApp(this);
@@ -925,16 +899,16 @@ public class MainActivity extends AppCompatActivity {
                         //0 normal
                         //3 right
                         //1 left
-                        Log.d("ONCREATEDEVICEROTATION", "onCreate: " + DEVICE_ROTATION);
-                        Log.d("ONCREATEDEVICEROTATION", "width: " + testWidth);
-                        Log.d("ONCREATEDEVICEROTATION", "height: " + testHeight);
+
 
                     }
                 }
             });
 
         }else {
-            handlePermissions();
+           // handlePermissions();
+            mAuth.signOut();
+            BackToLogin();
         }
     }
 
@@ -975,7 +949,7 @@ public class MainActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public boolean onTouchEvent(MotionEvent event){
-
+//SWIPING LEFT AND RIGHT
         switch(event.getAction())
         {
             case MotionEvent.ACTION_DOWN:
@@ -1027,17 +1001,21 @@ public class MainActivity extends AppCompatActivity {
         LockCameraFocus();
     }
 
+
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        handlePermissions();
+       // handlePermissions();
+        mAuth.signOut();
+        BackToLogin();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void handlePermissions(){
 
         //ARRAY OF PERMISSIONS
-        String[] permissions = {
+        final String[] permissions = {
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE,
                 Manifest.permission.CAMERA,
@@ -1047,6 +1025,7 @@ public class MainActivity extends AppCompatActivity {
                 Manifest.permission.ACCESS_NETWORK_STATE
         };
 
+        Log.d("DENIEDCOUNTER", "handlePermissions0: " + deniedCount);
         //ARE THESE PERMISSIONS GIVEN
         if(ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[0]) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(this.getApplicationContext(),permissions[1]) == PackageManager.PERMISSION_GRANTED &&
@@ -1061,8 +1040,11 @@ public class MainActivity extends AppCompatActivity {
 
         }else{
             //IF NOT GRANTED, ASK FOR THEM:
-            ActivityCompat.requestPermissions(MainActivity.this,permissions,ALL_PERMISSION_CODE);
+            mAuth.signOut();
+            BackToLogin();
+
         }
+
 
     }
 }

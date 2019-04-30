@@ -50,7 +50,7 @@ public class SendNotificationJava extends AsyncTask<String,String,String> {
             //compile the json string
             OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
             wr.write(json.toString());
-            wr.flush();
+            wr.flush();//forces output bytes to be written out
             conn.getInputStream();
 
         }

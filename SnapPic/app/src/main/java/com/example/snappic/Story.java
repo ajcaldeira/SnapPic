@@ -1,5 +1,5 @@
 package com.example.snappic;
-
+//CLASS TO SAVE THE DATA OF STORIES
 public class Story {
 
     //private String name;

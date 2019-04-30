@@ -1,9 +1,10 @@
 package com.example.snappic;
-
+//CLASS FOR REGISTERING THE USER
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -42,7 +43,7 @@ public class RegsiterUser extends AppCompatActivity {
                 //IF THE FIELD IS NOT EMPTY
                 progressBarReg.setVisibility(View.VISIBLE);
                 String userFullName = txtFullName.getText().toString();
-                if(userFullName != ""){
+                if(!userFullName.equals("")){//THE USER MUST ENTER A NAME
                     //CREATE USER OBJECT TO STORE CUSTOM DATA
                     User userReg = new User(userFullName,phoneNumber);
                     FirebaseDatabase.getInstance().getReference("Users")
@@ -55,7 +56,7 @@ public class RegsiterUser extends AppCompatActivity {
                                         Intent mainScreen = new Intent(RegsiterUser.this, MainActivity.class);
                                         startActivity(mainScreen);
                                         progressBarReg.setVisibility(View.GONE);
-                                        finish();
+                                        finish(); //destroy the activity
                                     }
                                 }
                             });
@@ -72,7 +73,13 @@ public class RegsiterUser extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        txtErrorRegister.setVisibility(View.INVISIBLE);
+        txtErrorRegister.setVisibility(View.INVISIBLE);//make sure the error is invisible when it starts
 
+    }
+    //OVERIDE BACK BUTTON PRESS
+    @Override
+    public void onBackPressed() {
+        //exit if back is pressed as there is nowhere else to go
+       //nothing
     }
 }

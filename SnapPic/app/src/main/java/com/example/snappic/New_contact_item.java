@@ -1,5 +1,5 @@
 package com.example.snappic;
-
+//class for new contact in the recycler view
 public class New_contact_item {
     private String txtNewContName;
     private String txtNewContNumber;

@@ -44,7 +44,6 @@
 
         </service>
         <activity android:name=".RegsiterUser" />
-        <activity android:name=".RegisterScreen" />
         <activity android:name=".LoginScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

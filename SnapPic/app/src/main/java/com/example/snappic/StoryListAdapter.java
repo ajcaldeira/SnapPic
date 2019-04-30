@@ -1,5 +1,5 @@
 package com.example.snappic;
-
+//ADAPTER TO WRITE STORIES TO THE LIST VIEW
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -58,10 +58,12 @@ public class StoryListAdapter extends ArrayAdapter<Story> {
         ImageView storyImg  = convertView.findViewById(R.id.storyImg);
         txtStoryDate.setText(date);
         txtStoryName.setText(name);
+        //INSTEAD OF USING PICASSO HERE, WE DOWNLOAD THE IMAGE FROM FIREBASE AND DISPLAY IT
         new DownloadImageTask(storyImg).execute(imgUrl);
         return convertView;
     }
 
+    //async task accessing the gui from another thread
     private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
         ImageView bmImage;
         public DownloadImageTask(ImageView bmImage) {

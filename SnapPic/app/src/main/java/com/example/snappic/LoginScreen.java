@@ -45,7 +45,6 @@ public class LoginScreen extends AppCompatActivity {
     private int ALL_PERMISSION_CODE = 1;
 
     EditText txtPhoneNumber;
-    EditText txtVerCode;
     Button btnGetNumber;
     Button btnWrongNumber;
     Button btnReconnect;
@@ -61,7 +60,7 @@ public class LoginScreen extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_screen);
-        handlePermissions();
+        handlePermissions(); //check permissions
         txtPhoneNumber = findViewById(R.id.txtPhoneNumber);
         btnGetNumber = findViewById(R.id.btnGetNumber);
         txtError = findViewById(R.id.txtError);
@@ -101,9 +100,10 @@ public class LoginScreen extends AppCompatActivity {
                             @Override
                             public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
                                 signInWithPhoneAuthCredential(phoneAuthCredential);
-
+                                //firebase authenticating user
                             }
 
+                            //if firebase verification fails
                             @Override
                             public void onVerificationFailed(FirebaseException e) {
                                 progressBar.setVisibility(View.INVISIBLE);
@@ -119,6 +119,7 @@ public class LoginScreen extends AppCompatActivity {
             }
             }
         });
+        //this pops up if the phone finds whe wrong number
         btnWrongNumber.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -154,6 +155,7 @@ public class LoginScreen extends AppCompatActivity {
     //OVERIDE BACK BUTTON PRESS
     @Override
     public void onBackPressed() {
+        //exit if back is pressed as there is nowhere else to go
         moveTaskToBack(true);
         this.finish();
         System.exit(0);
@@ -183,6 +185,8 @@ public class LoginScreen extends AppCompatActivity {
             btnGetNumber.setEnabled(true);
         }
     }
+
+    //check if network connection is available
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -207,6 +211,7 @@ public class LoginScreen extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
 
+        //on start check if the user is authenticated and direct to the main screen
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(currentUser != null) {
             Intent mainScreen = new Intent(LoginScreen.this, MainActivity.class);
@@ -279,17 +284,21 @@ public class LoginScreen extends AppCompatActivity {
 
     }
 
+    //go to the register screen
     public void GoToRegScreen(){
         Intent regScreen = new Intent(LoginScreen.this, RegsiterUser.class);
         //send phone number that was successfully verified
         regScreen.putExtra("phoneNumber",phoneNumber);
         startActivity(regScreen);
     }
+
+    //go to rhe main screen
     public void GoToMainScreen(){
         Intent mainScreen = new Intent(LoginScreen.this, MainActivity.class);
         startActivity(mainScreen);
     }
 
+    //HANDLE ALL PERMISSIONS
     int deniedCount = 0;
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -345,7 +354,6 @@ public class LoginScreen extends AppCompatActivity {
                 deniedCount++;
 
             }else if (deniedCount == 2){
-                Log.d("DENIEDCOUNTER", "handlePermissions3: " + deniedCount);
                 //exit
                 this.finish();
                 System.exit(0);
@@ -353,7 +361,7 @@ public class LoginScreen extends AppCompatActivity {
                 ActivityCompat.requestPermissions(LoginScreen.this,permissions,ALL_PERMISSION_CODE);
                 deniedCount = 1;
 
-                Log.d("DENIEDCOUNTER", "handlePermissions1: " + deniedCount);
+
             }
 
         }
