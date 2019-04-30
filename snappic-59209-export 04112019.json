@@ -1,0 +1,268 @@
+{
+  "Users" : {
+    "xt7cCUHhLVdWzCsjodi2mQhIMnT2" : {
+      "Contacts" : {
+        "GwJCTeiRycYatESlbyXIl4u3D7s1" : {
+          "name" : "Sophie",
+          "number" : "+447706623468"
+        },
+        "k9uIDzfa2zR7aDnYsGur18AMqXE2" : {
+          "name" : "Mandy",
+          "number" : "+447708671254"
+        },
+        "lbyXI3iRTeycGD7sSl4uwJCYatE1" : {
+          "name" : "John",
+          "number" : "+35796496050"
+        }
+      },
+      "Received" : {
+        "GwJCTeiRycYatESlbyXIl4u3D7s1" : {
+          "1554049275776" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/PendingSent%2F1551703588978Dzk9uIfa2zR7aDnYsGur18AMqXE2.null?alt=media&token=3a55be3a-81ba-4a44-a879-ed7a0b286117",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          },
+          "1554049275777" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/PendingSent%2F1552061707264Dzk9uIfa2zR7aDnYsGur18AMqXE2.null?alt=media&token=9db0369c-a863-41df-8662-b86f687bd120",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          },
+          "1554049275778" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1551734114004Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=a72fac3d-6b69-4228-801e-cfd18377bf24",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          }
+        },
+        "lbyXI3iRTeycGD7sSl4uwJCYatE1" : {
+          "1554049275776" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/PendingSent%2F1551703588978Dzk9uIfa2zR7aDnYsGur18AMqXE2.null?alt=media&token=3a55be3a-81ba-4a44-a879-ed7a0b286117",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          },
+          "1554049275777" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/PendingSent%2F1552061707264Dzk9uIfa2zR7aDnYsGur18AMqXE2.null?alt=media&token=9db0369c-a863-41df-8662-b86f687bd120",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          },
+          "1554049275778" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1551734114004Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=a72fac3d-6b69-4228-801e-cfd18377bf24",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          }
+        }
+      },
+      "ReceivedContactRequests" : {
+        "XIlcYattESlbyXIl4u3D7s1" : {
+          "Name" : "Marios",
+          "Number" : "+447706623412"
+        },
+        "l4u3DCTeGwJiRycYatESlbyXI7s1" : {
+          "Name" : "Jack",
+          "Number" : "+447706623468"
+        },
+        "lbyXIl4u3GwJCTeiRycYatESD7s1" : {
+          "Name" : "Jakob",
+          "Number" : "+447706633468"
+        },
+        "s1GYXIl4uatESlby3wJCTeiRycD7" : {
+          "Name" : "Nader",
+          "Number" : "+447996623478"
+        },
+        "ycYatGwJCTeiRESlbyXIl4u3D7s1" : {
+          "Name" : "Ali",
+          "Number" : "+447706888468"
+        },
+        "123atGwJCTeiRESlbyXIl4u3D7s1" : {
+          "Name" : "Dummy1",
+          "Number" : "+447706888468"
+        },
+        "233atGwJCTeiRESlbyXIl4u3D7s1" : {
+          "Name" : "Dummy2",
+          "Number" : "+447706888468"
+        },
+        "345atGwJCTeiRESlbyXIl4u3D7s1" : {
+          "Name" : "Dummy3",
+          "Number" : "+447706888468"
+        },
+        "456atGwJCTeiRESlbyXIl4u3D7s1" : {
+          "Name" : "Dummy4",
+          "Number" : "+447706888468"
+        }
+      },
+      "Story" : {
+        "2019-03-25" : {
+          "-LaopWm94-R4RYXWh8p2" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1553517124229Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=a98d1316-7824-46b3-ba14-4d1d146db89b",
+            "mName" : "SnapPic_2019-03-25-12-32-01.jpg",
+            "timestamp" : "1553517125745"
+          }
+        },
+        "2019-03-31" : {
+          "-LbJYPvPSZumPEjSR61E" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1554049249633Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=ab2b91e3-e947-4a35-a16b-4dd6a56d52aa",
+            "mName" : "SnapPic_2019-03-31-17-20-46.jpg",
+            "timestamp" : "1554049251232"
+          }
+        }
+      },
+      "name" : "Angelo",
+      "number" : "+447708521254"
+    },
+    "GwJCTeiRycYatESlbyXIl4u3D7s1" : {
+      "Received" : {
+        "xt7cCUHhLVdWzCsjodi2mQhIMnT2" : {
+          "1554049275776" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1554049275776Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=c3ab6d37-9fb7-43e6-82af-7177f5c99f94",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          },
+          "1555017037449" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1555017037454Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=0ad99a54-47c4-4735-87e3-9c47567a3167",
+            "mName" : "SnapPic_2019-04-11-22-10-35.jpg",
+            "timestamp" : "1555017037449"
+          }
+        }
+      },
+      "Story" : {
+        "2019-05-01" : {
+          "-L_g_vL1RvFefzBPuHtW" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1553395576415Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=4d29c5a6-c8bb-48cb-afe6-189d379d1030",
+            "mName" : "SnapPic_2019.03.14.12.30.58",
+            "timestamp" : "1552567295012"
+          }
+        }
+      },
+      "name" : "Sophie",
+      "number" : "+447706623468"
+    },
+    "XIlcYattESlbyXIl4u3D7s1" : {
+      "Received" : {
+        "xt7cCUHhLVdWzCsjodi2mQhIMnT2" : {
+          "1554049275776" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1554049275776Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=c3ab6d37-9fb7-43e6-82af-7177f5c99f94",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          }
+        }
+      },
+      "Story" : {
+        "2019-05-01" : {
+          "-L_g_vL1RvFefzBPuHtW" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1553395576415Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=4d29c5a6-c8bb-48cb-afe6-189d379d1030",
+            "mName" : "SnapPic_2019.03.14.12.30.58",
+            "timestamp" : "1552567295012"
+          }
+        }
+      },
+      "name" : "Marios",
+      "number" : "+445555555555"
+    },
+    "l4u3DCTeGwJiRycYatESlbyXI7s1" : {
+      "Received" : {
+        "xt7cCUHhLVdWzCsjodi2mQhIMnT2" : {
+          "1554049275776" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1554049275776Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=c3ab6d37-9fb7-43e6-82af-7177f5c99f94",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          }
+        }
+      },
+      "Story" : {
+        "2019-05-01" : {
+          "-L_g_vL1RvFefzBPuHtW" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1553395576415Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=4d29c5a6-c8bb-48cb-afe6-189d379d1030",
+            "mName" : "SnapPic_2019.03.14.12.30.58",
+            "timestamp" : "1552567295012"
+          }
+        }
+      },
+      "name" : "Jack",
+      "number" : "+444444444444"
+    },
+    "lbyXI3iRTeycGD7sSl4uwJCYatE1" : {
+      "ReceivedContactRequests" : {
+        "xt7cCUHhLVdWzCsjodi2mQhIMnT2" : {
+          "Name" : "Angelo",
+          "Number" : "+447708521254"
+        }
+      },
+      "Story" : {
+        "2019-05-01" : {
+          "lhb898f8778dfg83" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1553395511815Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=66f15526-8c70-4b26-9afb-02356b50afd7",
+            "mName" : "SnapPic_2019.03.06.09.36.22.jpg",
+            "timestamp" : "1552489241826"
+          }
+        }
+      },
+      "name" : "John",
+      "number" : "+35796496050"
+    },
+    "lbyXIl4u3GwJCTeiRycYatESD7s1" : {
+      "Received" : {
+        "xt7cCUHhLVdWzCsjodi2mQhIMnT2" : {
+          "1554049275776" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1554049275776Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=c3ab6d37-9fb7-43e6-82af-7177f5c99f94",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          }
+        }
+      },
+      "Story" : {
+        "2019-05-01" : {
+          "-L_g_vL1RvFefzBPuHtW" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1553395576415Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=4d29c5a6-c8bb-48cb-afe6-189d379d1030",
+            "mName" : "SnapPic_2019.03.14.12.30.58",
+            "timestamp" : "1552567295012"
+          }
+        }
+      },
+      "name" : "Jakob",
+      "number" : "+443333333333"
+    },
+    "s1GYXIl4uatESlby3wJCTeiRycD7" : {
+      "Received" : {
+        "xt7cCUHhLVdWzCsjodi2mQhIMnT2" : {
+          "1554049275776" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1554049275776Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=c3ab6d37-9fb7-43e6-82af-7177f5c99f94",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          }
+        }
+      },
+      "Story" : {
+        "2019-05-01" : {
+          "-L_g_vL1RvFefzBPuHtW" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1553395576415Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=4d29c5a6-c8bb-48cb-afe6-189d379d1030",
+            "mName" : "SnapPic_2019.03.14.12.30.58",
+            "timestamp" : "1552567295012"
+          }
+        }
+      },
+      "name" : "Nader",
+      "number" : "+442222222222"
+    },
+    "ycYatGwJCTeiRESlbyXIl4u3D7s1" : {
+      "Received" : {
+        "xt7cCUHhLVdWzCsjodi2mQhIMnT2" : {
+          "1554049275776" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1554049275776Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=c3ab6d37-9fb7-43e6-82af-7177f5c99f94",
+            "mName" : "SnapPic_2019-03-31-17-21-10.jpg",
+            "timestamp" : "1554049276848"
+          }
+        }
+      },
+      "Story" : {
+        "2019-05-01" : {
+          "-L_g_vL1RvFefzBPuHtW" : {
+            "mImageUrl" : "https://firebasestorage.googleapis.com/v0/b/snappic-59209.appspot.com/o/Story%2FDzk9uIfa2zR7aDnYsGur18AMqXE2%2F1553395576415Dzk9uIfa2zR7aDnYsGur18AMqXE2.jpg?alt=media&token=4d29c5a6-c8bb-48cb-afe6-189d379d1030",
+            "mName" : "SnapPic_2019.03.14.12.30.58",
+            "timestamp" : "1552567295012"
+          }
+        }
+      },
+      "name" : "Ali",
+      "number" : "+441111111111"
+    }
+  }
+}
